@@ -7,9 +7,11 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HelpCircle, X } from "lucide-react";
 import { HelpCenter } from "./HelpCenter";
+import { useHideNearFooter } from "../hooks/useHideNearFooter";
 
 export function FloatingHelpButton() {
   const [isOpen, setIsOpen] = useState(false);
+  const nearFooter = useHideNearFooter();
 
   // Lock body scroll while modal is open
   useEffect(() => {
@@ -30,7 +32,11 @@ export function FloatingHelpButton() {
   return (
     <>
       {/* ── Floating trigger — always visible ───────────────────────── */}
-      <div className="fixed bottom-6 right-6 z-40">
+      <div
+        className={`fixed bottom-6 right-6 z-40
+          transition-all duration-300
+          ${nearFooter ? "opacity-0 pointer-events-none translate-y-2" : "opacity-100 translate-y-0"}`}
+      >
             <button
               type="button"
               onClick={() => setIsOpen(true)}

@@ -2,10 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ensure root fills the full viewport */
+/* Ensure root fills the full viewport and never causes horizontal scroll */
 html, body, #root {
   width: 100%;
   max-width: 100%;
+  overflow-x: clip;
 }
 
 /* Smooth theme transition */
@@ -65,6 +66,15 @@ body {
 html[data-font-size="small"]       { font-size: 13px; }
 html[data-font-size="large"]       { font-size: 18px; }
 html[data-font-size="extra-large"] { font-size: 21px; }
+
+/*
+ * When the user scales the font, the <header> chrome (nav links, action
+ * buttons) uses rem-based Tailwind utilities that would also grow and
+ * overflow the viewport. We counter-scale the header with CSS zoom so it
+ * stays at its original design size. Content sections are unaffected.
+ */
+html[data-font-size="large"]       header { zoom: calc(16 / 18); }
+html[data-font-size="extra-large"] header { zoom: calc(16 / 21); }
 
 /* ─── Accessibility: High Contrast ─────────────────────────────────────────
    Boosts global contrast for users with low vision or colour blindness.

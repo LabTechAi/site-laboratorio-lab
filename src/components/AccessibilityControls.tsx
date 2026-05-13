@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useAccessibility, FONT_SIZES } from "./AccessibilityContext";
 import { useTheme } from "../context/ThemeContext";
+import { useHideNearFooter } from "../hooks/useHideNearFooter";
 
 type ThemeMode = "light" | "dark" | "system";
 
@@ -43,6 +44,7 @@ export function AccessibilityControls() {
   const { isDark, setDark } = useTheme();
 
   const [isOpen, setIsOpen] = useState(false);
+  const nearFooter = useHideNearFooter();
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     try {
       return (localStorage.getItem("lab-theme-mode") as ThemeMode) || "system";
@@ -84,7 +86,11 @@ export function AccessibilityControls() {
   ];
 
   return (
-    <div className="fixed bottom-6 left-6 z-50">
+    <div
+      className={`fixed bottom-6 left-6 z-50
+        transition-all duration-300
+        ${nearFooter ? "opacity-0 pointer-events-none translate-y-2" : "opacity-100 translate-y-0"}`}
+    >
       {/* Floating trigger */}
       <button
         onClick={toggle}
@@ -126,11 +132,12 @@ export function AccessibilityControls() {
               aria-modal="true"
               aria-label="Painel de Acessibilidade"
               className="absolute bottom-16 left-0
-                w-80 max-w-[calc(100vw-2rem)]
+                w-80 max-w-[calc(100vw-3rem)]
                 bg-white dark:bg-gray-800
                 border border-gray-200 dark:border-gray-700
                 rounded-2xl shadow-2xl shadow-gray-900/20
-                overflow-hidden"
+                overflow-hidden flex flex-col
+                max-h-[min(520px,calc(100svh-6rem)])"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4
@@ -154,7 +161,7 @@ export function AccessibilityControls() {
               </div>
 
               {/* Body */}
-              <div className="p-5 space-y-5 overflow-y-auto max-h-[calc(100vh-12rem)]">
+              <div className="flex-1 overflow-y-auto p-5 space-y-5">
 
                 {/* — Theme — */}
                 <section>

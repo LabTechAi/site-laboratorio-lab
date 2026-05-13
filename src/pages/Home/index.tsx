@@ -11,7 +11,6 @@ import SpecialtiesSection from "./SpecialtiesSection";
 import ExamsSection from "./ExamsSection";
 import ConveniosSection from "./ConveniosSection";
 import UnitsSection from "./UnitsSection";
-import FAQSection from "./FAQSection";
 import ContactSection from "./ContactSection";
 
 export default function Home() {
@@ -24,7 +23,6 @@ export default function Home() {
       <ExamsSection />
       <ConveniosSection />
       <UnitsSection />
-      <FAQSection />
       <ContactSection />
     </>
   );
