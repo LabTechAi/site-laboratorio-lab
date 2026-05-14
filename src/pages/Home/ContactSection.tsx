@@ -111,7 +111,7 @@ export default function ContactSection() {
                 <div>
                   <p className="text-xs font-medium text-blue-300 mb-0.5">Telefone</p>
                   <a
-                    href="tel:+556133455500"
+                    href="tel:+556132453766"
                     className="text-sm text-white/90 hover:text-white transition-colors"
                   >
                     (61) 3345-5500
@@ -152,17 +152,7 @@ export default function ContactSection() {
               <p className="text-xs font-medium text-blue-300 mb-3">Redes Sociais</p>
               <div className="flex gap-3">
                 <a
-                  href="https://wa.me/556133455500"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="WhatsApp LAB"
-                  className="w-9 h-9 rounded-lg bg-green-500/80 hover:bg-green-500 text-white
-                    flex items-center justify-center transition-colors duration-200"
-                >
-                  <WhatsAppIcon />
-                </a>
-                <a
-                  href="https://www.instagram.com/laboratorioolab"
+                  href="https://www.instagram.com/laboratorio.lab.brasilia/"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram LAB"
@@ -172,7 +162,7 @@ export default function ContactSection() {
                   <InstagramIcon />
                 </a>
                 <a
-                  href="https://www.linkedin.com/company/laboratorio-lab"
+                  href="https://www.linkedin.com/company/laboratorio-lab-brasilia/"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn LAB"
@@ -236,7 +226,7 @@ export default function ContactSection() {
 
             {/* WhatsApp CTA button */}
             <a
-              href="https://wa.me/556133455500"
+              href="https://wa.me/556132453766"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-auto flex items-center justify-center gap-2 w-full py-3 rounded-xl
@@ -252,7 +242,7 @@ export default function ContactSection() {
 
             {/* Agendamento CTA */}
             <a
-              href="tel:+556133455500"
+              href="tel:+556132453766"
               className="flex items-center justify-center gap-2 w-full py-3 rounded-xl
                 text-sm font-semibold text-white
                 border-2 border-white/50 hover:border-white hover:bg-white/10
