@@ -1,0 +1,23 @@
+{
+  "skill_name": "architecture",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Preciso que você crie o ARCHITECTURE.md do nosso projeto. É uma aplicação Next.js 14 com App Router, TypeScript, Supabase (auth + banco de dados PostgreSQL), Tailwind CSS e está hospedada na Vercel. A estrutura de pastas é: src/app/ para rotas, src/components/ui/ para componentes de UI, src/components/features/ para componentes de domínio, src/lib/ para integrações, src/hooks/ e src/types/. Os principais fluxos são: login via Supabase Auth, listagem e criação de projetos, e upload de arquivos para o Supabase Storage.",
+      "expected_output": "Arquivo ARCHITECTURE.md completo com: tabela de stack com versões, árvore de diretórios comentada, pelo menos um diagrama Mermaid de arquitetura geral, diagrama de sequência do fluxo de autenticação, seção de ADRs com decisões reais (ex: por que Supabase, por que App Router), seção de variáveis de ambiente, e tudo em português.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Documenta a arquitetura do projeto pra mim. É uma API REST feita em FastAPI (Python 3.11), usa PostgreSQL via SQLAlchemy como ORM, Redis pra cache e sessões, JWT pra autenticação, e tem um worker Celery pra tarefas assíncronas (envio de e-mail, processamento de relatórios). Estrutura: app/routers/, app/models/, app/schemas/, app/services/, app/workers/. Tem Docker Compose com os serviços: api, postgres, redis, celery_worker.",
+      "expected_output": "ARCHITECTURE.md com: stack completa (FastAPI, SQLAlchemy, Celery, Redis, PostgreSQL com versões), árvore de diretórios comentada, diagrama Mermaid mostrando os serviços do Docker Compose e suas conexões, diagrama de fluxo de uma requisição autenticada end-to-end, fluxo do worker Celery, ADRs sobre escolha de Celery vs alternativas e uso de Redis duplo (cache + broker).",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Atualiza o ARCHITECTURE.md do projeto. Adicionamos um novo módulo de notificações em tempo real usando WebSockets (via Socket.io), e migramos o banco de dados de MySQL para PostgreSQL. O arquivo atual documenta apenas a estrutura básica do projeto React + Node.js/Express.",
+      "expected_output": "ARCHITECTURE.md atualizado que: preserva as informações existentes sobre React + Express, adiciona seção sobre o módulo de WebSockets com diagrama de sequência, adiciona ADR sobre a migração MySQL → PostgreSQL com contexto e trade-offs, atualiza a tabela de stack, e adiciona nota de 'última atualização'.",
+      "files": []
+    }
+  ]
+}

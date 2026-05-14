@@ -154,7 +154,7 @@ export default function SpecialtiesSection() {
           whileInView="visible"
           viewport={{ once: true, amount: 0.15 }}
           variants={stagger}
-          className="grid grid-cols-1 sm:grid-cols-2 gap-5"
+          className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start"
         >
           {SPECIALTIES.map((sp) => {
             const isActive = activeId === sp.id;

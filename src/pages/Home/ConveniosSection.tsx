@@ -188,13 +188,25 @@ const AccordionItem: React.FC<{ cat: Category; query: string }> = ({ cat, query 
   const [open, setOpen] = useState(false);
 
   // Apply search filter
+  // Strategy: if the category title/subtitle matches the query, show ALL items in that
+  // category. Only fall back to per-item filtering when the category title doesn't match.
+  // This makes queries like "bradesco", "geap", "público" work intuitively.
+  const q = query.toLowerCase();
+  const categoryMatches =
+    query.length > 0 &&
+    (cat.title.toLowerCase().includes(q) || cat.subtitle.toLowerCase().includes(q));
+
   const filteredLogos =
     cat.type === "logos"
-      ? cat.logos.filter((l) => l.name.toLowerCase().includes(query.toLowerCase()))
+      ? categoryMatches
+        ? cat.logos
+        : cat.logos.filter((l) => l.name.toLowerCase().includes(q))
       : [];
   const filteredItems =
     cat.type === "text"
-      ? cat.items.filter((i) => i.name.toLowerCase().includes(query.toLowerCase()))
+      ? categoryMatches
+        ? cat.items
+        : cat.items.filter((i) => i.name.toLowerCase().includes(q))
       : [];
 
   const hasResults = cat.type === "logos" ? filteredLogos.length > 0 : filteredItems.length > 0;
@@ -306,18 +318,39 @@ export default function ConveniosSection() {
   const [query, setQuery] = useState("");
   const trimmed = query.trim();
 
-  // Show total match count when searching
+  // Show total match count when searching (mirrors the same logic as AccordionItem)
   const matchCount = useMemo(() => {
     if (!trimmed) return 0;
+    const q = trimmed.toLowerCase();
     let total = 0;
     for (const cat of CATEGORIES) {
+      const categoryMatches =
+        cat.title.toLowerCase().includes(q) || cat.subtitle.toLowerCase().includes(q);
       if (cat.type === "logos") {
-        total += cat.logos.filter((l) => l.name.toLowerCase().includes(trimmed.toLowerCase())).length;
+        total += categoryMatches
+          ? cat.logos.length
+          : cat.logos.filter((l) => l.name.toLowerCase().includes(q)).length;
       } else {
-        total += cat.items.filter((i) => i.name.toLowerCase().includes(trimmed.toLowerCase())).length;
+        total += categoryMatches
+          ? cat.items.length
+          : cat.items.filter((i) => i.name.toLowerCase().includes(q)).length;
       }
     }
     return total;
+  }, [trimmed]);
+
+  // Hide categories with zero results during an active search
+  const visibleCategories = useMemo(() => {
+    if (!trimmed) return CATEGORIES;
+    const q = trimmed.toLowerCase();
+    return CATEGORIES.filter((cat) => {
+      const categoryMatches =
+        cat.title.toLowerCase().includes(q) || cat.subtitle.toLowerCase().includes(q);
+      if (categoryMatches) return true;
+      if (cat.type === "logos")
+        return cat.logos.some((l) => l.name.toLowerCase().includes(q));
+      return cat.items.some((i) => i.name.toLowerCase().includes(q));
+    });
   }, [trimmed]);
 
   return (
@@ -363,34 +396,36 @@ export default function ConveniosSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.45 }}
-          className="relative max-w-md mx-auto mb-8"
+          className="max-w-md mx-auto mb-8"
         >
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar convênio ou plano..."
-            aria-label="Buscar convênio"
-            className="w-full pl-10 pr-10 py-3 rounded-xl text-sm
-              bg-white dark:bg-gray-800
-              border border-gray-200 dark:border-gray-700
-              text-gray-900 dark:text-gray-100
-              placeholder-gray-400 dark:placeholder-gray-500
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
-              focus-visible:ring-offset-1 dark:focus-visible:ring-offset-gray-900
-              shadow-sm"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery("")}
-              aria-label="Limpar busca"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600
-                dark:hover:text-gray-200 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar convênio ou plano..."
+              aria-label="Buscar convênio"
+              className="w-full pl-10 pr-9 py-3 rounded-xl text-sm
+                bg-white dark:bg-gray-800
+                border border-gray-200 dark:border-gray-700
+                text-gray-900 dark:text-gray-100
+                placeholder-gray-400 dark:placeholder-gray-500
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
+                focus-visible:ring-offset-1 dark:focus-visible:ring-offset-gray-900
+                shadow-sm"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                aria-label="Limpar busca"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600
+                  dark:hover:text-gray-200 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
           {trimmed && (
             <p className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
               {matchCount} resultado{matchCount !== 1 ? "s" : ""} para "{trimmed}"
@@ -406,11 +441,25 @@ export default function ConveniosSection() {
           variants={stagger}
           className="space-y-3"
         >
-          {CATEGORIES.map((cat) => (
-            <motion.div key={cat.id} variants={fadeInUp}>
-              <AccordionItem cat={cat} query={trimmed} />
-            </motion.div>
-          ))}
+          <AnimatePresence initial={false}>
+            {visibleCategories.map((cat) => (
+              <motion.div
+                key={cat.id}
+                variants={fadeInUp}
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0, height: 0, marginTop: 0, overflow: "hidden" }}
+                transition={{ duration: 0.2 }}
+              >
+                <AccordionItem cat={cat} query={trimmed} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+          {trimmed && visibleCategories.length === 0 && (
+            <p className="text-center text-sm text-gray-400 dark:text-gray-500 py-6">
+              Nenhum convênio encontrado para &ldquo;{trimmed}&rdquo;.
+            </p>
+          )}
         </motion.div>
 
         {/* Footer note */}
