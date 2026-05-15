@@ -3,9 +3,10 @@
  * portal de resultados, and "Fale com o Patologista" button.
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Phone, Mail, Clock, ExternalLink, MessageCircle } from "lucide-react";
+import PathologistConsultationModal from "../../components/PathologistConsultationModal";
 
 // WhatsApp and Instagram SVG icons
 const WhatsAppIcon = () => (
@@ -39,6 +40,8 @@ const stagger = {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function ContactSection() {
+  const [patologistaOpen, setPatologistaOpen] = useState(false);
+
   return (
     <section
       id="contato"
@@ -205,24 +208,21 @@ export default function ContactSection() {
             </a>
 
             {/* Fale com o Patologista */}
-            <a
-              href="https://docs.google.com/forms/d/e/1FAIpQLSd_patologista_form/viewform"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => setPatologistaOpen(true)}
               className="flex items-center gap-4 bg-white/10 hover:bg-white/20 rounded-xl p-4
-                border border-white/20 transition-all duration-200 group"
+                border border-white/20 transition-all duration-200 group w-full text-left"
             >
               <div className="w-10 h-10 rounded-lg bg-indigo-500/60 flex items-center justify-center shrink-0">
                 <MessageCircle className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-white group-hover:text-blue-200 transition-colors">
-                  Fale com o Patologista
+                  Fale com um Patologista
                 </p>
                 <p className="text-xs text-blue-200/70 mt-0.5">Dúvidas técnicas sobre laudos</p>
               </div>
-              <ExternalLink className="w-4 h-4 text-blue-300/60 group-hover:text-blue-300 transition-colors" />
-            </a>
+            </button>
 
             {/* WhatsApp CTA button */}
             <a
@@ -255,6 +255,11 @@ export default function ContactSection() {
           </motion.div>
         </motion.div>
       </div>
+
+      <PathologistConsultationModal
+        isOpen={patologistaOpen}
+        onClose={() => setPatologistaOpen(false)}
+      />
     </section>
   );
 }

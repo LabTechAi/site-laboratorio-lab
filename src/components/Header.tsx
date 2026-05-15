@@ -9,6 +9,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { Menu, X, Sun, Moon, ExternalLink, MessageSquare } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
+import PathologistConsultationModal from "./PathologistConsultationModal";
 
 // ─── Navigation links (anchor-based, all on the Home page) ──────────────────
 const NAV_LINKS = [
@@ -66,6 +67,7 @@ export default function Header() {
   const { isDark, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
+  const [patologistaOpen, setPatologistaOpen] = useState(false);
 
   const { scrollY } = useScroll();
   // Glass layer fades in over the first 60px of scroll
@@ -88,12 +90,24 @@ export default function Header() {
     return () => observers.forEach((o) => o?.disconnect());
   }, []);
 
-  // ── Close mobile menu on scroll ──────────────────────────────────────────
+  // ── Close mobile menu on scroll (delta-based) ───────────────────────────
+  // Uses scroll distance from the position when the menu opened, NOT absolute
+  // position. This prevents the race condition where residual scroll momentum
+  // at scrollY > 80 immediately re-closes a freshly opened menu.
   useEffect(() => {
     if (!mobileOpen) return;
-    const unsub = scrollY.on("change", (v) => { if (v > 80) setMobileOpen(false); });
-    return unsub;
-  }, [mobileOpen, scrollY]);
+
+    const openScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      if (Math.abs(window.scrollY - openScrollY) > 60) {
+        setMobileOpen(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [mobileOpen]);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
@@ -207,10 +221,8 @@ export default function Header() {
             </a>
 
             {/* Fale com o Patologista */}
-            <a
-              href="https://forms.gle/peKeAhqLPvPvdCoy8"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => setPatologistaOpen(true)}
               className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold
                 rounded-xl text-white
                 bg-gradient-to-r from-blue-600 to-blue-700
@@ -223,7 +235,7 @@ export default function Header() {
               <MessageSquare className="w-3.5 h-3.5 shrink-0" />
               <span className="hidden 2xl:inline">Fale com um Patologista</span>
               <span className="inline 2xl:hidden">Patologista</span>
-            </a>
+            </button>
 
             <ThemeToggle isDark={isDark} toggle={toggleTheme} />
           </div>
@@ -316,11 +328,8 @@ export default function Header() {
                   <ExternalLink className="w-4 h-4" />
                   Acesse seus resultados
                 </a>
-                <a
-                  href="https://forms.gle/peKeAhqLPvPvdCoy8"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={closeMobile}
+                <button
+                  onClick={() => { closeMobile(); setPatologistaOpen(true); }}
                   className="flex items-center justify-center gap-2 w-full py-3 rounded-xl
                     text-sm font-semibold text-white
                     bg-gradient-to-r from-blue-600 to-blue-700
@@ -328,12 +337,16 @@ export default function Header() {
                 >
                   <MessageSquare className="w-4 h-4" />
                   Fale com um Patologista
-                </a>
+                </button>
               </div>
             </div>
           </motion.nav>
         )}
       </AnimatePresence>
+      <PathologistConsultationModal
+        isOpen={patologistaOpen}
+        onClose={() => setPatologistaOpen(false)}
+      />
     </motion.header>
   );
 }

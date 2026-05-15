@@ -43,10 +43,11 @@ const SLIDES: Slide[] = [
     ctaSecondary: { label: "Entre em Contato", href: "#contato" },
   },
   {
-    bg: "/assets/fundos home/novembro azul.png",
-    title: "Novembro Azul",
-    subtitle: "Cuidar da saúde é um ato de coragem",
-    ctaPrimary: { label: "Saiba Mais", href: "#exames" },
+    bg: "/assets/fundos home/MAIO VERMELHO.svg",
+    title: "Maio Vermelho:\nA Patologia no Diagnóstico Precoce\ndo Câncer Bucal",
+    subtitle:
+      "Lesões suspeitas exigem análise rigorosa. O Laboratório LAB oferece a precisão necessária para o diagnóstico citopatológico e histopatológico.",
+    ctaPrimary: { label: "Conheça nossos exames de Patologia", href: "#exames" },
     ctaSecondary: { label: "Entre em Contato", href: "#contato" },
   },
 ];
@@ -130,7 +131,7 @@ export default function HeroSection() {
                 initial="hidden"
                 animate="visible"
                 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white
-                  leading-tight tracking-tight mb-4"
+                  leading-tight tracking-tight mb-4 whitespace-pre-line"
               >
                 {SLIDES[current].title}
               </motion.h1>

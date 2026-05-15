@@ -4,7 +4,7 @@
  * Routes:
  *  /           → Home (institutional site, wrapped in MainLayout with Header + Footer)
  *  /parceiros  → Parceiros (standalone landing page — has its own header)
- *  /admin      → AdminWaitlist (standalone admin panel — has its own layout)
+ *  /admin      → Admin (standalone admin panel — has its own layout)
  *
  * ThemeProvider wraps the entire app so dark-mode state is shared globally.
  */
@@ -18,7 +18,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Parceiros from "./pages/Parceiros";
-import AdminWaitlist from "./AdminWaitlist";
+import Admin from "./pages/Admin";
 
 /** Layout used by all "institutional" pages — Header + content + Footer + floating widgets. */
 function MainLayout() {
@@ -50,7 +50,7 @@ export default function App() {
 
             {/* Standalone pages — render their own layout */}
             <Route path="/parceiros" element={<Parceiros />} />
-            <Route path="/admin" element={<AdminWaitlist />} />
+            <Route path="/admin" element={<Admin />} />
           </Routes>
         </BrowserRouter>
       </AccessibilityProvider>
