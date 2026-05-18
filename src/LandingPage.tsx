@@ -232,7 +232,7 @@ const STEPS: StepData[] = [
     number: 4,
     title: "Relatório comentado",
     description:
-      "A HealthTech ORIA gera o relatório comentado em linguagem simples, a partir dos resultados laboratoriais.",
+      "A nossa empresa parceira ORIA gera o relatório comentado em linguagem simples, a partir dos resultados laboratoriais.",
   },
   {
     number: 5,
@@ -284,7 +284,7 @@ const FAQ_ITEMS: FAQItemData[] = [
   {
     question: "Quanto custa?",
     answer:
-      "O valor do pacote é de R$ 600, podendo ser dividido em 6x de R$ 100.",
+      "O valor do pacote é de R$ 799,92 podendo ser dividido em até 8x de R$ 99,99.",
   },
   {
     question: "Quantas vagas estão disponíveis?",
@@ -664,7 +664,7 @@ const WaitlistForm: React.FC<{
           <span className="relative z-10">Lista de espera lotada</span>
         ) : (
           <>
-            <span className="relative z-10">Entrar na lista de espera</span>
+            <span className="relative z-10">Garantir prioridade nas vagas</span>
             {/* Shimmer sweep — continuous light reflection over the button */}
             <motion.span
               aria-hidden="true"
@@ -1011,7 +1011,7 @@ export default function LandingPage() {
                 hover:from-blue-600 hover:to-blue-700
                 transition-[box-shadow,background] duration-200 text-sm"
             >
-              <span className="relative z-10">Comece agora!</span>
+              <span className="relative z-10">Entre na listagem de vagas</span>
               <motion.span
                 aria-hidden="true"
                 className="absolute inset-0 -skew-x-12
@@ -1318,7 +1318,7 @@ export default function LandingPage() {
                   {/* Header row */}
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-                      Lista de espera aberta
+                      Pré-inscrição aberta
                     </span>
                     <span
                       className={`px-2.5 py-1 text-xs font-bold rounded-full ${
@@ -1331,52 +1331,67 @@ export default function LandingPage() {
                     </span>
                   </div>
 
-                  {/* Price */}
-                  <div className="mb-1">
-                    <span
-                      className="text-[3.5rem] font-extrabold tracking-tight leading-none
-                        text-blue-900 dark:text-blue-300"
-                    >
-                      R$&nbsp;600
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    +50 marcadores laboratoriais para colaboradores de parceiros LAB.
+                  {/* Title */}
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-blue-900 dark:text-blue-100 mb-4">
+                    Check-up Alta Performance
+                  </h2>
+
+                  {/* Description */}
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                    Análise completa com mais de 50 marcadores laboratoriais para colaboradores e parceiros LAB.
                   </p>
 
-                  {/* Installment */}
+                  {/* Price container with visual highlight */}
                   <div
-                    className="bg-green-50 dark:bg-green-900/20
-                      border border-green-200 dark:border-green-800/40
-                      rounded-xl p-4 mb-4"
+                    className="bg-gray-100 dark:bg-gray-700/50
+                      border-l-4 border-blue-500 dark:border-blue-400
+                      rounded-r-xl p-5 mb-4"
                   >
-                    <strong
-                      className="block text-xl font-extrabold
-                        text-green-800 dark:text-green-400"
-                    >
-                      6x de R$ 100
-                    </strong>
-                    <span className="text-sm text-green-700 dark:text-green-500">
-                      Facilidade de pagamento: R$ 100 por mês.
-                    </span>
-                  </div>
-
-                  {/* Market price comparison */}
-                  <div
-                    className="flex justify-between gap-4 border-t border-gray-100
-                      dark:border-gray-700 pt-4 mb-4"
-                  >
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {/* Market price comparison */}
+                    <div className="mb-3">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
                         Valor estimado no mercado
                       </p>
                       <strong
-                        className="text-lg font-bold text-gray-800 dark:text-gray-200
+                        className="text-lg font-bold text-gray-700 dark:text-gray-300
                           line-through opacity-60"
                       >
                         R$ 2.500
                       </strong>
                     </div>
+
+                    {/* Main price */}
+                    <div className="mb-3">
+                      <span
+                        className="text-4xl font-extrabold tracking-tight leading-none
+                          text-blue-900 dark:text-blue-300"
+                      >
+                        R$&nbsp;799,92
+                      </span>
+                    </div>
+
+                    {/* Installment */}
+                    <div
+                      className="bg-green-50 dark:bg-green-900/30
+                        border border-green-200 dark:border-green-800/50
+                        rounded-lg p-3"
+                    >
+                      <strong
+                        className="block text-lg font-extrabold
+                          text-green-800 dark:text-green-400"
+                      >
+                        Ou 8x de R$ 99,99 sem juros
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* Economy microcopy */}
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-6 text-center font-medium">
+                    Economia real de 68% garantida nesta oferta.
+                  </p>
+
+                  {/* Available slots info */}
+                  <div className="border-t border-gray-100 dark:border-gray-700 pt-4 mb-4">
                     <div>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         Vagas iniciais
@@ -1388,7 +1403,7 @@ export default function LandingPage() {
                             : "text-blue-900 dark:text-blue-300"
                         }`}
                       >
-                        {vagasEsgotadas ? "Esgotado" : `${vagasDisponiveis} restantes`}
+                        {vagasEsgotadas ? "Esgotado" : `${vagasDisponiveis} vagas`}
                       </strong>
                     </div>
                   </div>
@@ -1445,7 +1460,7 @@ export default function LandingPage() {
               whileInView="visible"
               viewport={{ once: true, margin: "-80px" }}
               variants={stagger}
-              className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4"
+              className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"
             >
               {STEPS.map((step) => (
                 <StepCard key={step.number} {...step} />
@@ -1483,8 +1498,7 @@ export default function LandingPage() {
                   </h2>
                   <p className="text-base text-gray-600 dark:text-gray-200 leading-relaxed">
                     Uma entrega integrada: coleta e laudo laboratorial pelo LAB,
-                    relatório comentado gerado pela HealthTech ORIA e orientação online
-                    educativa conduzida pelo LAB para esclarecimento geral dos resultados.
+                    relatório comentado gerado pela empresa parceira Oria.
                   </p>
                 </motion.div>
 
@@ -1594,8 +1608,8 @@ export default function LandingPage() {
                   value: "R$ 2.500",
                   striked: true,
                 },
-                { label: "Condição LAB para parceiros", value: "R$ 600" },
-                { label: "Pagamento facilitado", value: "6x R$ 100" },
+                { label: "Condição LAB para parceiros", value: "R$ 799,92" },
+                { label: "Pagamento facilitado", value: "8x R$ 99,99" },
               ].map(({ label, value, striked }) => (
                 <div key={label} className="text-center py-4 sm:py-0 px-6">
                   <small className="block text-blue-200 text-xs mb-2">{label}</small>

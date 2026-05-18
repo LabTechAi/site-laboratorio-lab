@@ -28,7 +28,7 @@ const UNITS: Unit[] = [
     subtitle: "Unidade principal",
     address: "BL E – SHLS 716 Sul, Brasília – DF",
     hours: "Seg–Sex: 07h30 às 18h30",
-    phone: "(61) 3345-5500",
+    phone: "(61) 3345-3766",
     mapSrc:
       "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3839.471569847362!2d-47.92820708493872!3d-15.827589137828377!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x935bcca4c04be2b9%3A0x6c7aa4f39bfab54f!2sSHLS%20Ql%20716%2C%20Bras%C3%ADlia%20-%20DF!5e0!3m2!1spt-BR!2sbr!4v1700000000000!5m2!1spt-BR!2sbr",
   },

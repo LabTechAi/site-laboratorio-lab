@@ -117,7 +117,7 @@ export default function ContactSection() {
                     href="tel:+556132453766"
                     className="text-sm text-white/90 hover:text-white transition-colors"
                   >
-                    (61) 3345-5500
+                    (61) 3345-3766
                   </a>
                 </div>
               </div>
