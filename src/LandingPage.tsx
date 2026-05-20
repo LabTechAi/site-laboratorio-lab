@@ -124,9 +124,9 @@ const FEATURES: FeatureCardData[] = [
   },
   {
     icon: <MessageCircle className="w-5 h-5" />,
-    title: "Orientação online educativa",
+    title: "Conversa educativa com o LAB",
     description:
-      "Momento de esclarecimento geral sobre o laudo e o relatório, sem diagnóstico, prescrição ou substituição da consulta médica.",
+      "O LAB conduz uma conversa para esclarecer dúvidas gerais sobre o laudo e o relatório, sem diagnóstico, prescrição ou substituição da consulta médica.",
   },
   {
     icon: <Leaf className="w-5 h-5" />,
@@ -236,9 +236,9 @@ const STEPS: StepData[] = [
   },
   {
     number: 5,
-    title: "Orientação online",
+    title: "Conversa educativa",
     description:
-      "O LAB realiza uma conversa educativa para esclarecimentos gerais, sem caráter de consulta médica.",
+      "O LAB realiza uma conversa educativa para esclarecimentos gerais sobre os resultados, sem caráter de consulta médica.",
   },
 ];
 
@@ -269,7 +269,7 @@ const FAQ_ITEMS: FAQItemData[] = [
   {
     question: "O pacote substitui uma consulta médica?",
     answer:
-      "Não. O pacote oferece exames laboratoriais, laudo, relatório comentado e orientação online educativa. Diagnóstico, prescrição e tratamento devem ser feitos por médico ou profissional de saúde habilitado.",
+      "Não. O pacote oferece exames laboratoriais, laudo, relatório comentado ORIA e uma conversa educativa conduzida pelo LAB. Diagnóstico, prescrição e tratamento devem ser feitos por médico ou profissional de saúde habilitado.",
   },
   {
     question: "O que é o relatório comentado ORIA?",
@@ -277,9 +277,9 @@ const FAQ_ITEMS: FAQItemData[] = [
       "É um guia educativo que traduz os resultados laboratoriais em linguagem simples, destaca pontos de atenção e sugere perguntas para levar ao médico.",
   },
   {
-    question: "A orientação online é uma consulta?",
+    question: "A conversa educativa do LAB é uma consulta médica?",
     answer:
-      "Não. É um momento educativo para esclarecer o material recebido e orientar a preparação para a consulta médica. Não há diagnóstico, prescrição ou tratamento.",
+      "Não. É um momento conduzido pelo LAB para esclarecer o laudo e o relatório recebidos, auxiliando na preparação para a consulta com o médico. Não há diagnóstico, prescrição ou tratamento.",
   },
   {
     question: "Quanto custa?",
@@ -1215,7 +1215,7 @@ export default function LandingPage() {
                     rounded-full px-3.5 py-1.5 text-xs font-bold mb-5"
                 >
                   <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                  Iniciativa especial para colaboradores de parceiros LAB
+                  Sua saúde preventiva em um só lugar
                 </motion.div>
 
                 {/* H1 with gradient */}
@@ -1241,8 +1241,8 @@ export default function LandingPage() {
                 >
                   Uma condição especial do LAB para colaboradores de parceiros
                   realizarem um check-up laboratorial amplo, com laudo laboratorial,
-                  relatório comentado em linguagem simples e orientação online educativa
-                  para entender melhor os resultados e se preparar para a conversa com
+                  relatório comentado em linguagem simples e uma conversa educativa com
+                  o LAB para esclarecer os resultados antes da consulta com
                   seu médico.
                 </motion.p>
 
@@ -1338,7 +1338,7 @@ export default function LandingPage() {
 
                   {/* Description */}
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                    Análise completa com mais de 50 marcadores laboratoriais para colaboradores e parceiros LAB.
+                    +50 marcadores laboratoriais com condição exclusiva.
                   </p>
 
                   {/* Price container with visual highlight */}
@@ -1460,7 +1460,7 @@ export default function LandingPage() {
               whileInView="visible"
               viewport={{ once: true, margin: "-80px" }}
               variants={stagger}
-              className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"
+              className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4"
             >
               {STEPS.map((step) => (
                 <StepCard key={step.number} {...step} />
@@ -1494,7 +1494,7 @@ export default function LandingPage() {
                     className="text-3xl sm:text-4xl font-extrabold tracking-tight
                       text-blue-900 dark:text-blue-100 mb-3"
                   >
-                    O que o colaborador recebe
+                    O que você vai receber
                   </h2>
                   <p className="text-base text-gray-600 dark:text-gray-200 leading-relaxed">
                     Uma entrega integrada: coleta e laudo laboratorial pelo LAB,
@@ -1731,7 +1731,7 @@ export default function LandingPage() {
               <p className="text-sm text-amber-800 dark:text-amber-400 leading-relaxed">
                 O LAB Cuidado Preventivo para Parceiros tem finalidade informativa,
                 educativa e de apoio à organização dos resultados laboratoriais. A
-                orientação online não é consulta médica e não substitui diagnóstico,
+                conversa educativa conduzida pelo LAB não é consulta médica e não substitui diagnóstico,
                 prescrição, tratamento ou acompanhamento individualizado por profissional
                 habilitado. Em caso de sintomas, alterações relevantes ou dúvidas
                 clínicas, o participante deve procurar seu médico ou profissional de saúde
@@ -1813,8 +1813,7 @@ export default function LandingPage() {
               >
                 {vagasEsgotadas
                   ? "Todas as vagas foram preenchidas. Acompanhe nossas redes para novidades."
-                  : `As primeiras ${TOTAL_VAGAS} vagas são destinadas a colaboradores de parceiros LAB.`}
-                A inscrição inicial pode ser feita no formulário do topo da página.
+                  : "Garanta agora uma das 50 vagas com essa condição especial. Suba até o topo da página, preencha o formulário e dê o primeiro passo."}
               </motion.p>
               <motion.a
                 variants={fadeInUp}
