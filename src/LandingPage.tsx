@@ -8,7 +8,7 @@
  * If using Next.js App Router add "use client" as the first line.
  */
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   motion,
   AnimatePresence,
@@ -30,6 +30,7 @@ import {
   ChevronDown,
   ArrowUp,
   Loader2,
+  Search,
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
 
@@ -138,73 +139,101 @@ const FEATURES: FeatureCardData[] = [
 
 const EXAM_GROUPS: ExamGroupData[] = [
   {
-    title: "Metabolismo e risco cardiometabólico",
+    title: "Avaliação Geral e Inflamação",
     items: [
-      "Glicose",
-      "Hemoglobina glicada",
+      "Hemograma Completo",
+      "VHS (Velocidade de Hemossedimentação)",
+      "PCR-US (Proteína C Reativa Ultra Sensível)",
+      "EAS (Exame de Urina)",
+    ],
+  },
+  {
+    title: "Metabolismo e Diabetes",
+    items: [
+      "Glicemia de Jejum",
+      "Hemoglobina Glicada",
       "Insulina",
-      "HOMA-IR",
-      "Perfil lipídico",
-      "Apolipoproteína A1",
-      "Apolipoproteína B",
+      "Índice HOMA-IR",
+      "HOMA-BETA",
+    ],
+  },
+  {
+    title: "Saúde Cardiovascular",
+    items: [
+      "Lipidograma Completo",
+      "Apolipoproteínas A e B",
+      "Fibrinogênio",
       "Homocisteína",
     ],
   },
   {
-    title: "Inflamação e acompanhamento geral",
-    items: ["Hemograma", "PCR ultrassensível", "VHS", "Fibrinogênio"],
-  },
-  {
-    title: "Vitaminas, minerais e reservas nutricionais",
-    items: [
-      "Vitamina D (25-OH)",
-      "Vitamina B12",
-      "Ácido fólico",
-      "Ferritina",
-      "Ferro sérico",
-      "Magnésio",
-      "Cálcio",
-    ],
-  },
-  {
-    title: "Minerais e metais",
-    items: ["Zinco sérico", "Selênio sérico", "Cobre", "Alumínio sérico"],
-  },
-  {
-    title: "Tireoide",
-    items: ["TSH", "T3 livre", "T4 livre", "Anti-TPO", "Anti-tireoglobulina"],
-  },
-  {
-    title: "Fígado, rins e marcadores gerais",
+    title: "Função Hepática",
     items: [
       "TGO (AST)",
       "TGP (ALT)",
-      "GGT",
-      "Fosfatase Alcalina",
-      "Bilirrubinas",
-      "Albumina",
-      "Proteínas Totais",
-      "Ureia",
-      "Creatinina",
-      "Ácido úrico",
-      "Sódio",
-      "Potássio",
-      "Cloro",
-      "Urina Tipo I",
+      "Gama GT",
     ],
   },
   {
-    title: "Hormônios e eixo endócrino",
+    title: "Função Renal",
     items: [
-      "Cortisol basal",
-      "DHEA",
-      "Estradiol (E2)",
+      "Creatinina",
+      "Ureia",
+      "Ácido Úrico",
+    ],
+  },
+  {
+    title: "Tireoide",
+    items: [
+      "TSH",
+      "T3 Livre",
+      "T4 Livre",
+      "Anti-TPO",
+      "Antitireoglobulina",
+    ],
+  },
+  {
+    title: "Vitaminas e Metabolismo Ósseo",
+    items: [
+      "Vitamina B12",
+      "Ácido Fólico",
+      "25-Hidroxivitamina D",
+      "Cálcio Total",
+      "Paratormônio",
+      "Magnésio Sérico",
+    ],
+  },
+  {
+    title: "Ferro e Oligoelementos",
+    items: [
+      "Ferritina",
+      "Ferro Sérico",
+      "Zinco Sanguíneo",
+      "Selênio Sérico",
+      "Cobre Sérico",
+      "Cádmio Sérico",
+      "Alumínio Sérico",
+    ],
+  },
+  {
+    title: "Hormônios — Masculino",
+    items: [
+      "Testosterona Livre e Total",
+      "Estradiol",
+      "PSA (≥ 50 anos; ou ≥ 45 anos com histórico familiar de câncer)",
+      "Androstenediona",
+    ],
+  },
+  {
+    title: "Hormônios — Feminino",
+    items: [
+      "Estrogênio",
       "Progesterona",
+      "Estradiol",
+      "Hormônio Luteinizante (LH)",
+      "Hormônio Folículo-Estimulante (FSH)",
       "Prolactina",
-      "LH",
-      "FSH",
-      "Paratormônio (PTH)",
-      "PSA Total (Masculino)",
+      "Androstenediona",
     ],
   },
 ];
@@ -306,6 +335,20 @@ const TRUST_ITEMS = [
   "Relatório comentado incluso",
 ];
 
+// Color palette — one accent per exam group (cycles if > 10 groups)
+const EXAM_CARD_COLORS = [
+  { gradient: "from-blue-500 to-blue-600",    dot: "bg-blue-500",    badge: "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",    glow: "hover:shadow-blue-100 dark:hover:shadow-blue-900/40",    ring: "hover:border-blue-200 dark:hover:border-blue-700" },
+  { gradient: "from-indigo-500 to-indigo-600", dot: "bg-indigo-500",  badge: "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300", glow: "hover:shadow-indigo-100 dark:hover:shadow-indigo-900/40", ring: "hover:border-indigo-200 dark:hover:border-indigo-700" },
+  { gradient: "from-violet-500 to-violet-600", dot: "bg-violet-500",  badge: "bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300", glow: "hover:shadow-violet-100 dark:hover:shadow-violet-900/40", ring: "hover:border-violet-200 dark:hover:border-violet-700" },
+  { gradient: "from-cyan-500 to-cyan-600",    dot: "bg-cyan-500",    badge: "bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300",    glow: "hover:shadow-cyan-100 dark:hover:shadow-cyan-900/40",    ring: "hover:border-cyan-200 dark:hover:border-cyan-700" },
+  { gradient: "from-teal-500 to-teal-600",    dot: "bg-teal-500",    badge: "bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300",    glow: "hover:shadow-teal-100 dark:hover:shadow-teal-900/40",    ring: "hover:border-teal-200 dark:hover:border-teal-700" },
+  { gradient: "from-emerald-500 to-emerald-600", dot: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300", glow: "hover:shadow-emerald-100 dark:hover:shadow-emerald-900/40", ring: "hover:border-emerald-200 dark:hover:border-emerald-700" },
+  { gradient: "from-sky-500 to-sky-600",      dot: "bg-sky-500",     badge: "bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300",      glow: "hover:shadow-sky-100 dark:hover:shadow-sky-900/40",      ring: "hover:border-sky-200 dark:hover:border-sky-700" },
+  { gradient: "from-rose-500 to-rose-600",    dot: "bg-rose-500",    badge: "bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",    glow: "hover:shadow-rose-100 dark:hover:shadow-rose-900/40",    ring: "hover:border-rose-200 dark:hover:border-rose-700" },
+  { gradient: "from-amber-500 to-amber-600",  dot: "bg-amber-500",   badge: "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",  glow: "hover:shadow-amber-100 dark:hover:shadow-amber-900/40",  ring: "hover:border-amber-200 dark:hover:border-amber-700" },
+  { gradient: "from-pink-500 to-pink-600",    dot: "bg-pink-500",    badge: "bg-pink-50 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300",    glow: "hover:shadow-pink-100 dark:hover:shadow-pink-900/40",    ring: "hover:border-pink-200 dark:hover:border-pink-700" },
+] as const;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared input class (Design System – Input Padrão)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -399,28 +442,150 @@ const MetricBar: React.FC<{ label: string; value: number }> = ({ label, value })
 );
 
 // ExamCard ────────────────────────────────────
-const ExamCard: React.FC<ExamGroupData> = ({ title, items }) => (
-  <motion.article
-    variants={fadeInUp}
-    className="bg-white/90 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl shadow-sm
-      border border-gray-100 dark:border-gray-700/60 p-6"
-  >
-    <h3 className="text-sm font-bold text-blue-800 dark:text-blue-300 mb-3 leading-snug">
-      {title}
-    </h3>
-    <ul className="space-y-1.5">
-      {items.map((item) => (
-        <li
-          key={item}
-          className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300"
+// Highlights query match inside item text
+function highlightText(text: string, query: string): React.ReactNode {
+  if (!query) return text;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return text;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="bg-yellow-200 dark:bg-yellow-500/40 text-inherit rounded px-0.5 not-italic">
+        {text.slice(idx, idx + query.length)}
+      </mark>
+      {text.slice(idx + query.length)}
+    </>
+  );
+}
+
+const itemStagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.045, delayChildren: 0.1 } },
+};
+const itemFade = {
+  hidden: { opacity: 0, x: -8 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.25, ease: "easeOut" } },
+};
+
+// Threshold = menor card da lista — garante altura uniforme para todos os cards colapsados
+const COLLAPSE_THRESHOLD = Math.min(...EXAM_GROUPS.map((g) => g.items.length));
+
+const ExamCard: React.FC<ExamGroupData & { colorIndex: number; query: string }> = ({
+  title,
+  items,
+  colorIndex,
+  query,
+}) => {
+  const shouldReduceMotion = useReducedMotion();
+  const color = EXAM_CARD_COLORS[colorIndex % EXAM_CARD_COLORS.length];
+
+  // Expand logic: only active outside of search mode
+  const isSearching = query.length > 0;
+  const needsExpand = !isSearching && items.length > COLLAPSE_THRESHOLD;
+  const [expanded, setExpanded] = useState(false);
+
+  // Reset expansion whenever the search query changes
+  useEffect(() => { setExpanded(false); }, [query]);
+
+  const visibleItems = needsExpand && !expanded ? items.slice(0, COLLAPSE_THRESHOLD) : items;
+  const extraCount = items.length - COLLAPSE_THRESHOLD;
+
+  return (
+    <motion.article
+      variants={fadeInUp}
+      whileHover={shouldReduceMotion ? {} : { y: -4, scale: 1.015 }}
+      whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 360, damping: 28 }}
+      className={`relative bg-white dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl
+        border border-gray-100 dark:border-gray-700/60 overflow-hidden
+        shadow-sm hover:shadow-xl transition-shadow duration-300
+        ${color.glow} ${color.ring} cursor-default flex flex-col`}
+    >
+      {/* Gradient accent bar */}
+      <div className={`h-1 w-full bg-gradient-to-r ${color.gradient} shrink-0`} />
+
+      <div className="p-5 flex flex-col flex-1">
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-2 mb-4">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-snug">
+            {highlightText(title, query)}
+          </h3>
+          <span className={`shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full ${color.badge}`}>
+            {items.length}
+          </span>
+        </div>
+
+        {/* Always-visible items */}
+        <motion.ul
+          variants={itemStagger}
+          initial="hidden"
+          animate="visible"
+          className="space-y-2"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-[7px] flex-shrink-0" />
-          {item}
-        </li>
-      ))}
-    </ul>
-  </motion.article>
-);
+          {visibleItems.map((item) => (
+            <motion.li
+              key={item}
+              variants={itemFade}
+              className="flex items-start gap-2.5 text-sm text-gray-600 dark:text-gray-300"
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${color.dot} mt-[6px] shrink-0
+                  ring-2 ring-white dark:ring-gray-800`}
+              />
+              <span className="leading-snug">{highlightText(item, query)}</span>
+            </motion.li>
+          ))}
+        </motion.ul>
+
+        {/* Overflow items — expand animation */}
+        {needsExpand && (
+          <div className="mt-auto pt-3">
+            <AnimatePresence initial={false}>
+              {expanded && (
+                <motion.ul
+                  key="overflow"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: shouldReduceMotion ? 0 : 0.25, ease: "easeOut" }}
+                  className="overflow-hidden space-y-2 mb-3"
+                >
+                  {items.slice(COLLAPSE_THRESHOLD).map((item) => (
+                    <li
+                      key={item}
+                      className="flex items-start gap-2.5 text-sm text-gray-600 dark:text-gray-300"
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${color.dot} mt-[6px] shrink-0
+                          ring-2 ring-white dark:ring-gray-800`}
+                      />
+                      <span className="leading-snug">{highlightText(item, query)}</span>
+                    </li>
+                  ))}
+                </motion.ul>
+              )}
+            </AnimatePresence>
+
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              className={`w-full flex items-center justify-center gap-1.5
+                text-xs font-semibold py-1.5 rounded-lg
+                transition-colors duration-200 ${color.badge} hover:opacity-80`}
+            >
+              <motion.span
+                animate={{ rotate: expanded ? 180 : 0 }}
+                transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
+              >
+                <ChevronDown className="w-3.5 h-3.5" />
+              </motion.span>
+              {expanded ? "Ver menos" : `Ver mais ${extraCount}`}
+            </button>
+          </div>
+        )}
+      </div>
+    </motion.article>
+  );
+};
 
 // StepCard — whileHover + whileTap microinteractions ─────────────────────────
 const StepCard: React.FC<StepData> = ({ number, title, description }) => {
@@ -716,6 +881,7 @@ export default function LandingPage() {
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [examSearch, setExamSearch] = useState("");
 
   // ── Vagas dinâmicas — consulta o count real da tabela waitlist ─────────────
   const [vagasDisponiveis, setVagasDisponiveis] = useState<number>(TOTAL_VAGAS);
@@ -1626,8 +1792,12 @@ export default function LandingPage() {
         </section>
 
         {/* ── Exams ─────────────────────────────────────────────────────── */}
-        <section id="exames" className="py-16 md:py-20">
+        <section id="exames" className="py-16 md:py-20
+          bg-gradient-to-b from-white via-slate-50/60 to-white
+          dark:from-gray-900 dark:via-gray-900/80 dark:to-gray-900">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            {/* Section header */}
             <motion.div
               initial="hidden"
               whileInView="visible"
@@ -1656,17 +1826,140 @@ export default function LandingPage() {
               </p>
             </motion.div>
 
+            {/* ── Search bar ──────────────────────────────────────────────── */}
             <motion.div
-              initial="hidden"
-              whileInView="visible"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
-              variants={stagger}
-              className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"
+              transition={{ duration: 0.4, ease: "easeOut", delay: 0.1 }}
+              className="max-w-xl mx-auto mb-8"
             >
-              {EXAM_GROUPS.map((group) => (
-                <ExamCard key={group.title} {...group} />
-              ))}
+              <div className="relative group">
+                <Search
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4
+                    text-gray-400 dark:text-gray-500
+                    group-focus-within:text-blue-500 transition-colors duration-200"
+                />
+                <input
+                  type="search"
+                  value={examSearch}
+                  onChange={(e) => setExamSearch(e.target.value)}
+                  placeholder="Pesquisar exame ou categoria…"
+                  aria-label="Pesquisar exames"
+                  className="w-full pl-11 pr-10 py-3
+                    bg-white dark:bg-gray-800
+                    border border-gray-200 dark:border-gray-700
+                    rounded-2xl shadow-sm
+                    text-sm text-gray-800 dark:text-gray-100
+                    placeholder:text-gray-400 dark:placeholder:text-gray-500
+                    focus:outline-none focus:ring-2 focus:ring-blue-500/30
+                    focus:border-blue-400 dark:focus:border-blue-500
+                    transition-all duration-200"
+                />
+                <AnimatePresence>
+                  {examSearch && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.7 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.7 }}
+                      transition={{ duration: 0.15 }}
+                      onClick={() => setExamSearch("")}
+                      aria-label="Limpar pesquisa"
+                      className="absolute right-3 top-1/2 -translate-y-1/2
+                        w-6 h-6 flex items-center justify-center rounded-full
+                        bg-gray-100 dark:bg-gray-700
+                        hover:bg-gray-200 dark:hover:bg-gray-600
+                        text-gray-500 dark:text-gray-400 transition-colors duration-150"
+                    >
+                      <X className="w-3 h-3" />
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Results count */}
+              <AnimatePresence mode="wait">
+                {examSearch && (
+                  <motion.p
+                    key="results"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2.5"
+                  >
+                    {(() => {
+                      const q = examSearch.toLowerCase().trim();
+                      const totalItems = EXAM_GROUPS.flatMap((g) => g.items).filter(
+                        (item) => item.toLowerCase().includes(q)
+                      ).length;
+                      const totalGroups = EXAM_GROUPS.filter(
+                        (g) =>
+                          g.title.toLowerCase().includes(q) ||
+                          g.items.some((i) => i.toLowerCase().includes(q))
+                      ).length;
+                      return totalItems === 0
+                        ? "Nenhum exame encontrado."
+                        : `${totalItems} exame${totalItems !== 1 ? "s" : ""} em ${totalGroups} categoria${totalGroups !== 1 ? "s" : ""}`;
+                    })()}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </motion.div>
+
+            {/* ── Cards grid ──────────────────────────────────────────────── */}
+            {(() => {
+              const q = examSearch.toLowerCase().trim();
+              const filtered = EXAM_GROUPS.map((g, i) => ({
+                ...g,
+                colorIndex: i,
+                items: q
+                  ? g.items.filter(
+                      (item) =>
+                        item.toLowerCase().includes(q) ||
+                        g.title.toLowerCase().includes(q)
+                    )
+                  : g.items,
+              })).filter((g) => g.items.length > 0);
+
+              return (
+                <motion.div layout className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
+                  <AnimatePresence mode="popLayout">
+                    {filtered.length > 0 ? (
+                      filtered.map((group) => (
+                        <motion.div
+                          key={group.title}
+                          layout
+                          initial={{ opacity: 0, scale: 0.94 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          transition={{ duration: 0.22, ease: "easeOut" }}
+                        >
+                          <ExamCard
+                            title={group.title}
+                            items={group.items}
+                            colorIndex={group.colorIndex}
+                            query={q}
+                          />
+                        </motion.div>
+                      ))
+                    ) : (
+                      <motion.div
+                        key="empty"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="col-span-full flex flex-col items-center gap-3 py-16
+                          text-gray-400 dark:text-gray-500"
+                      >
+                        <Search className="w-10 h-10 opacity-30" />
+                        <p className="text-sm">Nenhum exame encontrado para <strong className="text-gray-600 dark:text-gray-300">&ldquo;{examSearch}&rdquo;</strong></p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })()}
           </div>
         </section>
 
