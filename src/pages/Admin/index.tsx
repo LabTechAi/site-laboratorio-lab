@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2, LogOut, RefreshCw, Users, ShieldCheck, AlertCircle,
+  HeartPulse, Microscope, Building2,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase, WaitlistRow } from "../../supabaseClient";
 import AdminAuth from "../../components/AdminAuth";
 import AdminPathologistViews from "./AdminPathologistViews";
+import AdminColaboradoresView from "./AdminColaboradoresView";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatDate(iso: string): string {
@@ -176,11 +178,31 @@ const WaitlistTab: React.FC = () => {
 };
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
-type Tab = "waitlist" | "patologista";
+type Tab = "colaboradores" | "parceiros" | "patologista";
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "waitlist",    label: "Lista de Espera" },
-  { id: "patologista", label: "Consultas Patologistas" },
+interface NavTab   { id: Tab;    label: string; Icon: React.ElementType; }
+interface NavGroup { id: string; label: string; Icon: React.ElementType; tabs: NavTab[]; defaultTab: Tab; }
+
+const NAV: NavGroup[] = [
+  {
+    id: "saude",
+    label: "Saúde Preventiva",
+    Icon: HeartPulse,
+    defaultTab: "colaboradores",
+    tabs: [
+      { id: "colaboradores", label: "Colaboradores", Icon: Users     },
+      { id: "parceiros",     label: "Parceiros",     Icon: Building2 },
+    ],
+  },
+  {
+    id: "patologista",
+    label: "Patologista",
+    Icon: Microscope,
+    defaultTab: "patologista",
+    tabs: [
+      { id: "patologista", label: "Consultas", Icon: Microscope },
+    ],
+  },
 ];
 
 // ─── Authenticated dashboard ──────────────────────────────────────────────────
@@ -188,103 +210,267 @@ const AdminDashboard: React.FC<{ email: string; onSignOut: () => void }> = ({
   email,
   onSignOut,
 }) => {
-  const [activeTab, setActiveTab] = useState<Tab>("waitlist");
+  const [activeTab, setActiveTab] = useState<Tab>("colaboradores");
+
+  const activeGroup = NAV.find((g) => g.tabs.some((t) => t.id === activeTab))!;
+  const subTabs     = activeGroup.tabs.length > 1 ? activeGroup.tabs : null;
+
+  const handleGroupClick = (group: NavGroup) => {
+    if (activeGroup.id !== group.id) setActiveTab(group.defaultTab);
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-900">
-      {/* Sticky header */}
-      <header className="sticky top-0 z-20 bg-white dark:bg-gray-800
-        border-b border-gray-100 dark:border-gray-700 shadow-sm">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
+
+      {/* ── Header ───────────────────────────────────────────────────────────── */}
+      <header className="
+        sticky top-0 z-30
+        bg-white/85 dark:bg-gray-900/85
+        backdrop-blur-2xl saturate-150
+        border-b border-gray-200/50 dark:border-white/[0.06]
+        shadow-[0_1px_0_rgba(0,0,0,.04)]
+      ">
+
+        {/* Main bar */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8
-          h-14 flex items-center justify-between gap-4">
+          h-[62px] flex items-center justify-between gap-4">
 
           {/* Brand */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center
-              bg-gradient-to-br from-blue-500 to-indigo-600">
-              <ShieldCheck className="w-4 h-4 text-white" />
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="
+              w-8 h-8 rounded-[10px] flex items-center justify-center
+              bg-gradient-to-br from-blue-500 to-indigo-600
+              shadow-sm shadow-blue-500/25 ring-1 ring-blue-500/15
+            ">
+              <ShieldCheck className="w-[15px] h-[15px] text-white" />
             </div>
             <img
               src="/assets/logo/LOGO-HOR.svg"
               alt="LAB"
-              className="h-7 w-auto object-contain dark:hidden"
+              className="h-6 w-auto object-contain dark:hidden"
               draggable={false}
             />
             <img
               src="/assets/logo/LOGO-HOR-DM.svg"
               alt="LAB"
-              className="h-7 w-auto object-contain hidden dark:block"
+              className="h-6 w-auto object-contain hidden dark:block"
               draggable={false}
             />
-            <span className="hidden sm:block text-xs text-gray-400 dark:text-gray-500 font-medium">
-              · Admin
+            <span className="
+              hidden sm:flex items-center gap-1.5
+              text-[11px] font-bold uppercase tracking-[0.08em]
+              text-gray-400 dark:text-gray-500
+            ">
+              <span className="h-3.5 w-px bg-gray-200 dark:bg-gray-700 rounded-full" />
+              Admin
             </span>
           </div>
 
-          {/* Tabs (desktop) */}
-          <nav className="hidden md:flex items-center gap-1">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                  ${activeTab === tab.id
-                    ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          {/* Desktop segmented control */}
+          <nav aria-label="Navegação principal" className="hidden md:flex">
+            <div className="
+              flex items-center gap-[3px] p-[3px] rounded-2xl
+              bg-gray-100/90 dark:bg-white/[0.06]
+              ring-1 ring-black/[0.04] dark:ring-white/[0.04]
+            ">
+              {NAV.map((group) => {
+                const isActive  = group.id === activeGroup.id;
+                const GroupIcon = group.Icon;
+                return (
+                  <button
+                    key={group.id}
+                    onClick={() => handleGroupClick(group)}
+                    className="
+                      relative px-4 py-[7px] rounded-[13px]
+                      flex items-center gap-2
+                      transition-colors duration-150
+                      outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50
+                    "
+                  >
+                    {isActive && (
+                      <motion.span
+                        layoutId="group-pill"
+                        className="
+                          absolute inset-0 rounded-[13px]
+                          bg-white dark:bg-gray-700
+                          shadow-[0_1px_3px_rgba(0,0,0,.10),0_1px_2px_rgba(0,0,0,.06)]
+                          dark:shadow-[0_1px_4px_rgba(0,0,0,.4)]
+                          ring-[0.5px] ring-black/[0.06] dark:ring-white/[0.07]
+                        "
+                        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                      />
+                    )}
+                    <GroupIcon className={[
+                      "relative z-10 w-[14px] h-[14px] shrink-0 transition-colors duration-200",
+                      isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400",
+                    ].join(" ")} />
+                    <span className={[
+                      "relative z-10 text-[13px] font-medium whitespace-nowrap transition-colors duration-200",
+                      isActive ? "text-gray-900 dark:text-gray-100" : "text-gray-600 dark:text-gray-400",
+                    ].join(" ")}>
+                      {group.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </nav>
 
-          {/* User + sign out */}
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:block text-xs text-gray-500 dark:text-gray-400 truncate max-w-[160px]">
-              {email}
-            </span>
-            <button
+          {/* User + sign-out */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="
+              hidden lg:flex items-center gap-1.5 pl-2 pr-3 py-1.5 rounded-xl
+              bg-gray-100/80 dark:bg-white/[0.05]
+              ring-1 ring-black/[0.04] dark:ring-white/[0.04]
+            ">
+              <div className="
+                w-5 h-5 rounded-full flex items-center justify-center
+                bg-gradient-to-br from-blue-400 to-indigo-500
+                text-white text-[9px] font-bold uppercase
+                ring-1 ring-blue-400/30
+              ">
+                {email.slice(0, 1)}
+              </div>
+              <span className="text-[12px] font-medium text-gray-600 dark:text-gray-300
+                max-w-[140px] truncate">
+                {email}
+              </span>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
               onClick={onSignOut}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium
-                text-white rounded-xl shadow-md shadow-red-500/20
+              aria-label="Sair"
+              className="
+                flex items-center gap-1.5 px-3 py-[7px] rounded-xl
+                text-[13px] font-semibold text-white
                 bg-gradient-to-r from-red-500 to-rose-500
                 hover:from-red-600 hover:to-rose-600
-                transition-all duration-200"
+                shadow-sm shadow-red-500/20
+                transition-colors duration-150
+              "
             >
               <LogOut className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Sair</span>
-            </button>
+            </motion.button>
           </div>
         </div>
 
-        {/* Tabs (mobile) */}
-        <div className="md:hidden flex border-t border-gray-100 dark:border-gray-700">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-2.5 text-xs font-medium transition-colors duration-150
-                ${activeTab === tab.id
-                  ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
-                  : "text-gray-500 dark:text-gray-400"
-                }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        {/* Mobile group nav */}
+        <div className="md:hidden flex border-t border-gray-100/70 dark:border-white/[0.05]">
+          {NAV.map((group) => {
+            const isActive  = group.id === activeGroup.id;
+            const GroupIcon = group.Icon;
+            return (
+              <button
+                key={group.id}
+                onClick={() => handleGroupClick(group)}
+                className={[
+                  "flex-1 flex flex-col items-center gap-0.5 py-2.5 relative",
+                  "text-[10px] font-semibold uppercase tracking-wider transition-colors duration-150",
+                  isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-400 dark:text-gray-500",
+                ].join(" ")}
+              >
+                <GroupIcon className="w-4 h-4" />
+                <span className="leading-none">{group.label}</span>
+                {isActive && (
+                  <motion.div
+                    layoutId="mobile-group-line"
+                    className="absolute bottom-0 left-4 right-4 h-[2px] rounded-full
+                      bg-blue-500 dark:bg-blue-400"
+                    transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                  />
+                )}
+              </button>
+            );
+          })}
         </div>
+
+        {/* Sub-tab bar – aparece apenas para seções com múltiplas abas */}
+        <AnimatePresence>
+          {subTabs && (
+            <motion.div
+              key={activeGroup.id + "-sub"}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden
+                border-t border-gray-100/60 dark:border-white/[0.04]
+                bg-gray-50/50 dark:bg-white/[0.015]"
+            >
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center gap-1 h-[44px]">
+                  {subTabs.map((tab) => {
+                    const isActive = tab.id === activeTab;
+                    const TabIcon  = tab.Icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className="
+                          relative flex items-center gap-1.5 px-3 h-8 rounded-lg
+                          transition-colors duration-150
+                          outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40
+                        "
+                      >
+                        {isActive && (
+                          <motion.span
+                            layoutId="subtab-bg"
+                            className="absolute inset-0 rounded-lg
+                              bg-blue-500/[0.09] dark:bg-blue-400/[0.12]"
+                            transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                          />
+                        )}
+                        <TabIcon className={[
+                          "relative z-10 w-[13px] h-[13px] transition-colors duration-150",
+                          isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-400 dark:text-gray-500",
+                        ].join(" ")} />
+                        <span className={[
+                          "relative z-10 text-[13px] transition-colors duration-150",
+                          isActive
+                            ? "text-blue-600 dark:text-blue-400 font-semibold"
+                            : "text-gray-500 dark:text-gray-400 font-medium",
+                        ].join(" ")}>
+                          {tab.label}
+                        </span>
+                        {isActive && (
+                          <motion.div
+                            layoutId="subtab-line"
+                            className="absolute bottom-[-1px] left-0 right-0 h-[2px]
+                              rounded-full bg-blue-500 dark:bg-blue-400"
+                            transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* Page content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-        >
-          {activeTab === "waitlist" ? <WaitlistTab /> : <AdminPathologistViews />}
-        </motion.div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          >
+            {activeTab === "colaboradores" ? (
+              <AdminColaboradoresView />
+            ) : activeTab === "parceiros" ? (
+              <WaitlistTab />
+            ) : (
+              <AdminPathologistViews />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );

@@ -19,6 +19,7 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Parceiros from "./pages/Parceiros";
 import Admin from "./pages/Admin";
+import Colaboradores from "./pages/Colaboradores";
 
 /** Layout used by all "institutional" pages — Header + content + Footer + floating widgets. */
 function MainLayout() {
@@ -50,6 +51,7 @@ export default function App() {
 
             {/* Standalone pages — render their own layout */}
             <Route path="/parceiros" element={<Parceiros />} />
+            <Route path="/colaboradores" element={<Colaboradores />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>
         </BrowserRouter>
