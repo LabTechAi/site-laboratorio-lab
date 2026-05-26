@@ -32,6 +32,8 @@ import {
   ArrowRight,
   CheckCircle,
   Users,
+  Menu,
+  X,
 } from "lucide-react";
 import AnamnesisModal from "./components/AnamnesisModal";
 
@@ -85,6 +87,13 @@ const PRIVACY_BADGES = [
   "Dados confidenciais",
   "Uso exclusivo interno",
   "Sem compartilhamento externo",
+];
+
+const COLAB_NAV_LINKS = [
+  { label: "Como funciona", href: "#como-funciona", id: "como-funciona" },
+  { label: "O Programa",    href: "#pilares",       id: "pilares"       },
+  { label: "Privacidade",   href: "#privacidade",   id: "privacidade"   },
+  { label: "Investimento",  href: "#investimento",  id: "investimento"  },
 ];
 
 // ─── ThemeToggle (local) ──────────────────────────────────────────────────
@@ -168,6 +177,8 @@ export default function ColaboradoresPage() {
     document.documentElement.classList.contains("dark")
   );
   const [modalOpen, setModalOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection]   = useState("");
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);
@@ -176,6 +187,21 @@ export default function ColaboradoresPage() {
   const toggleTheme = useCallback(() => setIsDark((p) => !p), []);
   const openModal = useCallback(() => setModalOpen(true), []);
   const closeModal = useCallback(() => setModalOpen(false), []);
+
+  // Scroll spy — active nav section highlight
+  useEffect(() => {
+    const observers = COLAB_NAV_LINKS.map(({ id }) => {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      const obs = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActiveSection(id); },
+        { rootMargin: "-40% 0px -50% 0px" },
+      );
+      obs.observe(el);
+      return obs;
+    });
+    return () => observers.forEach((o) => o?.disconnect());
+  }, []);
 
   // ── Glassmorphism header — mesmo padrão do LandingPage ─────────────────
   const { scrollY, scrollYProgress } = useScroll();
@@ -254,41 +280,184 @@ export default function ColaboradoresPage() {
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16
           flex items-center justify-between gap-4">
 
-          {/* Logo SVG — light/dark swap, igual ao /parceiros */}
-          <motion.a
-            href="#top"
-            aria-label="LAB Cuidado Preventivo"
+          {/* Brand + context badge */}
+          <motion.div
             style={{ scale: logoBadgeScale }}
-            className="flex items-center shrink-0"
+            className="flex items-center gap-2 shrink-0"
           >
-            <img
-              src="/assets/LOGO-HOR.svg"
-              alt="LAB Cuidado Preventivo"
-              className="h-12 w-auto dark:hidden select-none"
-              draggable={false}
-            />
-            <img
-              src="/assets/LOGO-HOR-DM.svg"
-              alt="LAB Cuidado Preventivo"
-              className="h-12 w-auto hidden dark:block select-none"
-              draggable={false}
-            />
-          </motion.a>
+            <a href="#top" aria-label="LAB Cuidado Preventivo" className="flex items-center">
+              <img
+                src="/assets/LOGO-HOR.svg"
+                alt="LAB Cuidado Preventivo"
+                className="h-12 w-auto dark:hidden select-none"
+                draggable={false}
+              />
+              <img
+                src="/assets/LOGO-HOR-DM.svg"
+                alt="LAB Cuidado Preventivo"
+                className="h-12 w-auto hidden dark:block select-none"
+                draggable={false}
+              />
+            </a>
+            <span className="
+              inline-flex items-center px-2 py-[3px] rounded-md
+              text-[10px] font-bold tracking-[0.08em] uppercase
+              bg-teal-50 dark:bg-teal-900/25
+              border border-teal-200/70 dark:border-teal-700/40
+              text-teal-600 dark:text-teal-300
+              select-none
+            ">
+              Colabs
+            </span>
+          </motion.div>
+
+          {/* Desktop nav */}
+          <motion.nav
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.07, delayChildren: 0.12 } },
+            }}
+            className="hidden md:flex items-center gap-1 text-sm font-medium
+              text-gray-600 dark:text-gray-300"
+          >
+            {COLAB_NAV_LINKS.map(({ label, href, id }) => (
+              <motion.a
+                key={href}
+                href={href}
+                variants={{
+                  hidden: { opacity: 0, y: -8 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.32, ease: "easeOut" } },
+                }}
+                whileHover={{ y: -1 }}
+                transition={{ type: "spring", stiffness: 420, damping: 26 }}
+                className="relative px-3 py-2 rounded-lg
+                  hover:bg-blue-50/80 dark:hover:bg-blue-900/20
+                  hover:text-blue-700 dark:hover:text-blue-400
+                  transition-colors duration-150"
+              >
+                {label}
+                <motion.span
+                  aria-hidden="true"
+                  className="absolute bottom-1.5 left-3 right-3 h-0.5
+                    bg-blue-400/50 dark:bg-blue-500/50 rounded-full"
+                  initial={{ scaleX: 0 }}
+                  whileHover={{ scaleX: 1 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  style={{ originX: 0.5 }}
+                />
+                {activeSection === id && (
+                  <motion.span
+                    layoutId="colab-nav-underline"
+                    className="absolute bottom-1.5 left-3 right-3 h-0.5
+                      bg-blue-500 dark:bg-blue-400 rounded-full"
+                    transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                  />
+                )}
+              </motion.a>
+            ))}
+          </motion.nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-3">
-            <span
-              className="hidden sm:inline-flex items-center gap-1.5
-                text-[11px] text-blue-700 dark:text-blue-400 font-semibold
-                px-2.5 py-1 rounded-full
-                bg-blue-50 dark:bg-blue-900/30
-                border border-blue-200 dark:border-blue-700/50"
-            >
-              powered by Oria
-            </span>
+          <div className="flex items-center gap-2">
             <ThemeToggle isDark={isDark} toggle={toggleTheme} />
+            {/* CTA */}
+            <motion.button
+              onClick={openModal}
+              whileHover={{ scale: 1.04, y: -1 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: "spring", stiffness: 380, damping: 22 }}
+              className="relative overflow-hidden hidden sm:inline-flex items-center
+                px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600
+                text-white font-semibold rounded-xl
+                shadow-md shadow-blue-500/30
+                hover:shadow-lg hover:shadow-blue-500/45
+                hover:from-blue-600 hover:to-blue-700
+                transition-[box-shadow,background] duration-200 text-sm"
+            >
+              <span className="relative z-10">Participar</span>
+              <motion.span
+                aria-hidden="true"
+                className="absolute inset-0 -skew-x-12
+                  bg-gradient-to-r from-transparent via-white/30 to-transparent
+                  pointer-events-none"
+                animate={{ x: ["-200%", "200%"] }}
+                transition={{ repeat: Infinity, duration: 2.4, ease: "linear", repeatDelay: 1.6 }}
+              />
+            </motion.button>
+            {/* Mobile hamburger */}
+            <motion.button
+              onClick={() => setMobileMenuOpen((p) => !p)}
+              aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+              whileTap={{ scale: 0.88 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              className="md:hidden p-2 rounded-xl
+                hover:bg-gray-100 dark:hover:bg-gray-700/60
+                transition-colors duration-150"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {mobileMenuOpen ? (
+                  <motion.span key="close" initial={{ rotate: -60, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 60, opacity: 0 }} transition={{ duration: 0.16 }} className="block">
+                    <X className="w-5 h-5" />
+                  </motion.span>
+                ) : (
+                  <motion.span key="menu" initial={{ rotate: 60, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -60, opacity: 0 }} transition={{ duration: 0.16 }} className="block">
+                    <Menu className="w-5 h-5" />
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
           </div>
         </div>
+
+        {/* Mobile menu drawer */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.nav
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
+              className="relative md:hidden border-t
+                border-gray-100/80 dark:border-gray-700/60 overflow-hidden"
+            >
+              <div className="absolute inset-0
+                bg-white/92 dark:bg-gray-900/92 backdrop-blur-[14px] pointer-events-none" />
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.055, delayChildren: 0.06 } } }}
+                className="relative flex flex-col p-3 gap-0.5 text-sm font-medium"
+              >
+                {COLAB_NAV_LINKS.map(({ label, href }) => (
+                  <motion.a
+                    key={href}
+                    href={href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    variants={{ hidden: { opacity: 0, x: -14 }, visible: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 340, damping: 26 } } }}
+                    className="px-3 py-2.5 rounded-xl
+                      text-gray-700 dark:text-gray-300
+                      hover:bg-blue-50/80 dark:hover:bg-blue-900/20
+                      hover:text-blue-700 dark:hover:text-blue-400
+                      transition-colors duration-150"
+                  >
+                    {label}
+                  </motion.a>
+                ))}
+                <motion.button
+                  onClick={() => { openModal(); setMobileMenuOpen(false); }}
+                  variants={{ hidden: { opacity: 0, y: 10, scale: 0.97 }, visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 340, damping: 26 } } }}
+                  className="mt-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600
+                    text-white font-semibold rounded-xl text-center
+                    shadow-md shadow-blue-500/20"
+                >
+                  Participar do projeto piloto
+                </motion.button>
+              </motion.div>
+            </motion.nav>
+          )}
+        </AnimatePresence>
 
         {/* Scroll progress bar — mesmo padrão /parceiros */}
         <div className="absolute bottom-0 left-0 right-0 h-[2px] pointer-events-none
@@ -399,7 +568,7 @@ export default function ColaboradoresPage() {
         </section>
 
         {/* ── Oportunidade Exclusiva ───────────────────────────────────────── */}
-        <section className="py-10 md:py-14">
+        <section id="como-funciona" className="py-10 md:py-14">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial="hidden"
@@ -439,7 +608,7 @@ export default function ColaboradoresPage() {
         </section>
 
         {/* ── Pilares — mesmo estilo FeatureCard do /parceiros ────────────── */}
-        <section className="py-12 md:py-16">
+        <section id="pilares" className="py-12 md:py-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial="hidden"
@@ -496,7 +665,7 @@ export default function ColaboradoresPage() {
         </section>
 
         {/* ── Segurança e Privacidade ──────────────────────────────────────── */}
-        <section className="py-10 md:py-14">
+        <section id="privacidade" className="py-10 md:py-14">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial="hidden"
@@ -546,7 +715,7 @@ export default function ColaboradoresPage() {
         </section>
 
         {/* ── Investimento ────────────────────────────────────────────────── */}
-        <section className="py-12 md:py-16">
+        <section id="investimento" className="py-12 md:py-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial="hidden"
@@ -631,11 +800,11 @@ export default function ColaboradoresPage() {
                   Sem plano de saúde
                 </span>
                 <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                  R$ 300,00 facilitados
+                  R$ 450,00 facilitados
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
                   Valor total de{" "}
-                  <strong className="text-gray-800 dark:text-gray-200">R$ 300,00</strong>,
+                  <strong className="text-gray-800 dark:text-gray-200">R$ 450,00</strong>,
                   com parcelamento em até{" "}
                   <strong className="text-gray-800 dark:text-gray-200">10x</strong> sem
                   acréscimo.
@@ -650,7 +819,7 @@ export default function ColaboradoresPage() {
                   </span>
                   <div className="text-left leading-tight">
                     <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">
-                      R$ 30,00
+                      R$ 45,00
                     </span>
                     <span className="text-[11px] text-indigo-500/70 dark:text-indigo-400/60 block">
                       sem juros

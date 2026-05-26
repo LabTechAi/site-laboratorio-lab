@@ -31,6 +31,7 @@ import {
   ArrowUp,
   Loader2,
   Search,
+  ShieldAlert,
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
 
@@ -1077,28 +1078,43 @@ export default function LandingPage() {
             flex items-center justify-between gap-4"
         >
           {/* Brand — SVG logo, light/dark swap */}
-          <motion.a
-            href="#top"
-            aria-label="LAB Cuidado Preventivo"
+          {/* Brand + context badge */}
+          <motion.div
             style={{ scale: logoBadgeScale }}
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="flex items-center shrink-0"
+            className="flex items-center gap-2 shrink-0"
           >
-            <img
-              src="/assets/LOGO-HOR.svg"
-              alt="LAB Cuidado Preventivo"
-              className="h-12 w-auto dark:hidden select-none"
-              draggable={false}
-            />
-            <img
-              src="/assets/LOGO-HOR-DM.svg"
-              alt="LAB Cuidado Preventivo"
-              className="h-12 w-auto hidden dark:block select-none"
-              draggable={false}
-            />
-          </motion.a>
+            <a
+              href="#top"
+              aria-label="LAB Cuidado Preventivo"
+              className="flex items-center"
+            >
+              <img
+                src="/assets/LOGO-HOR.svg"
+                alt="LAB Cuidado Preventivo"
+                className="h-12 w-auto dark:hidden select-none"
+                draggable={false}
+              />
+              <img
+                src="/assets/LOGO-HOR-DM.svg"
+                alt="LAB Cuidado Preventivo"
+                className="h-12 w-auto hidden dark:block select-none"
+                draggable={false}
+              />
+            </a>
+            <span className="
+              inline-flex items-center px-2 py-[3px] rounded-md
+              text-[10px] font-bold tracking-[0.08em] uppercase
+              bg-indigo-50 dark:bg-indigo-900/25
+              border border-indigo-200/70 dark:border-indigo-700/40
+              text-indigo-600 dark:text-indigo-300
+              select-none
+            ">
+              Parceiros
+            </span>
+          </motion.div>
 
           {/* Desktop nav — staggered entrance + per-link hover effects */}
           <motion.nav
@@ -2011,25 +2027,57 @@ export default function LandingPage() {
               whileInView="visible"
               viewport={{ once: true }}
               variants={fadeInUp}
-              className="bg-amber-50 dark:bg-amber-900/20
-                border border-amber-200 dark:border-amber-800/40
-                rounded-2xl p-6 sm:p-8"
+              className="relative overflow-hidden rounded-2xl
+                bg-white/60 dark:bg-white/[0.03]
+                backdrop-blur-xl
+                border border-white/80 dark:border-white/10
+                shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)]
+                p-6 sm:p-8"
             >
-              <h2
-                className="text-xl font-bold text-amber-900 dark:text-amber-300
-                  mb-3 tracking-tight"
-              >
-                Importante: este serviço não substitui consulta médica.
-              </h2>
-              <p className="text-sm text-amber-800 dark:text-amber-400 leading-relaxed">
-                O LAB Cuidado Preventivo para Parceiros tem finalidade informativa,
-                educativa e de apoio à organização dos resultados laboratoriais. A
-                conversa educativa conduzida pelo LAB não é consulta médica e não substitui diagnóstico,
-                prescrição, tratamento ou acompanhamento individualizado por profissional
-                habilitado. Em caso de sintomas, alterações relevantes ou dúvidas
-                clínicas, o participante deve procurar seu médico ou profissional de saúde
-                responsável.
-              </p>
+              {/* Subtle ambient glow */}
+              <div className="pointer-events-none absolute -top-12 -right-12 w-40 h-40
+                rounded-full bg-amber-300/20 dark:bg-amber-500/10 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-8 -left-8 w-28 h-28
+                rounded-full bg-orange-200/20 dark:bg-orange-500/10 blur-2xl" />
+
+              <div className="relative flex items-start gap-4">
+                {/* Icon chip */}
+                <div className="shrink-0 mt-0.5 flex items-center justify-center w-10 h-10 rounded-xl
+                  bg-amber-100/80 dark:bg-amber-900/40
+                  border border-amber-200/60 dark:border-amber-700/30
+                  shadow-sm">
+                  <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  {/* Label pill */}
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 mb-2
+                    rounded-full text-[10px] font-bold tracking-widest uppercase
+                    bg-amber-100/70 dark:bg-amber-900/40
+                    border border-amber-200/60 dark:border-amber-700/30
+                    text-amber-700 dark:text-amber-400">
+                    <span className="w-1 h-1 rounded-full bg-amber-500 dark:bg-amber-400" />
+                    Aviso importante
+                  </span>
+
+                  <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100
+                    leading-snug tracking-tight mb-2">
+                    Este serviço não substitui consulta médica.
+                  </h2>
+
+                  <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                    O LAB Cuidado Preventivo para Parceiros tem finalidade informativa,
+                    educativa e de apoio à organização dos resultados laboratoriais. A
+                    conversa conduzida pelo LAB&nbsp;
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      não é consulta médica
+                    </span>
+                    &nbsp;e não substitui diagnóstico, prescrição, tratamento ou
+                    acompanhamento individualizado por profissional habilitado.
+                    Em caso de sintomas ou dúvidas clínicas, procure seu médico.
+                  </p>
+                </div>
+              </div>
             </motion.div>
           </div>
         </section>

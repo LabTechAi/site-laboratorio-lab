@@ -1,8 +1,8 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   RefreshCw, Search, X, CheckCircle, RotateCcw,
-  MessageCircle, AlertCircle, Loader2, Users, Filter,
+  MessageCircle, AlertCircle, Loader2, Users, ChevronDown,
 } from "lucide-react";
 import { supabase } from "../../supabaseClient";
 
@@ -68,6 +68,114 @@ const MessageCell: React.FC<{ text: string }> = ({ text }) => (
     {truncate(text)}
   </span>
 );
+
+// ─── FilterDropdown ───────────────────────────────────────────────────────────
+
+interface DropdownOption {
+  value: string;
+  label: string;
+  count?: number;
+  dotCls?: string;
+}
+
+const FilterDropdown: React.FC<{
+  value: string;
+  options: DropdownOption[];
+  onChange: (v: string) => void;
+  icon?: React.ReactNode;
+}> = ({ value, options, onChange, icon }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find((o) => o.value === value) ?? options[0];
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="
+          flex items-center gap-1.5 py-2.5 pl-3 pr-2.5 text-sm rounded-xl
+          border border-gray-200 dark:border-gray-600
+          bg-white dark:bg-gray-800
+          text-gray-800 dark:text-gray-100
+          hover:border-gray-300 dark:hover:border-gray-500
+          focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500
+          transition-all duration-200 whitespace-nowrap
+        "
+      >
+        {icon}
+        {selected.dotCls && <span className={`w-2 h-2 rounded-full ${selected.dotCls}`} />}
+        <span>{selected.label}</span>
+        {selected.count !== undefined && selected.value !== "all" && (
+          <span className="text-xs font-semibold text-white bg-blue-500 rounded-full px-1.5 py-0.5 leading-none ml-0.5">
+            {selected.count}
+          </span>
+        )}
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ml-0.5 ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="dd"
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.14 } }}
+            exit={{ opacity: 0, y: -4, scale: 0.97, transition: { duration: 0.1 } }}
+            className="
+              absolute left-0 top-full mt-1.5 z-30 min-w-[175px]
+              bg-white dark:bg-gray-800
+              border border-gray-100 dark:border-gray-700
+              rounded-xl shadow-xl shadow-black/10
+              py-1.5 overflow-hidden
+            "
+          >
+            {options.map((opt) => {
+              const active = opt.value === value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => { onChange(opt.value); setOpen(false); }}
+                  className={[
+                    "w-full flex items-center gap-2 px-3.5 py-2 text-sm transition-colors duration-100",
+                    active
+                      ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700",
+                  ].join(" ")}
+                >
+                  {opt.dotCls && <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dotCls}`} />}
+                  <span className="flex-1 text-left">{opt.label}</span>
+                  {opt.count !== undefined && (
+                    <span className={`text-xs px-1.5 py-0.5 rounded-md font-semibold ${
+                      active
+                        ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                    }`}>
+                      {opt.count}
+                    </span>
+                  )}
+                  {active && <CheckCircle className="w-3.5 h-3.5 shrink-0 ml-1" />}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function AdminPathologistViews() {
@@ -195,23 +303,15 @@ export default function AdminPathologistViews() {
         </div>
 
         {/* Status filter */}
-        <div className="relative">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-            className="pl-9 pr-4 py-2.5 text-sm rounded-xl appearance-none
-              border border-gray-200 dark:border-gray-600
-              bg-white dark:bg-gray-800
-              text-gray-800 dark:text-gray-100
-              focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500
-              transition-all duration-200 cursor-pointer"
-          >
-            <option value="all">Todos os status</option>
-            <option value="pendente">Pendente</option>
-            <option value="respondido">Respondido</option>
-          </select>
-        </div>
+        <FilterDropdown
+          value={statusFilter}
+          onChange={(v) => setStatusFilter(v as typeof statusFilter)}
+          options={[
+            { value: "all",        label: "Todos os status", count: rows.length },
+            { value: "pendente",   label: "Pendente",        count: rows.filter((r) => r.status === "pendente").length,   dotCls: "bg-yellow-400" },
+            { value: "respondido", label: "Respondido",      count: rows.filter((r) => r.status === "respondido").length, dotCls: "bg-green-500"  },
+          ]}
+        />
 
         {/* Refresh */}
         <button

@@ -19,6 +19,7 @@ import React, {
   useEffect,
   useCallback,
   useRef,
+  useMemo,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -28,6 +29,7 @@ import {
   AlertCircle,
   Users,
   ChevronRight,
+  ChevronDown,
   CheckCircle,
   ClipboardList,
   Phone,
@@ -36,6 +38,7 @@ import {
   Activity,
   FileText,
   Loader2,
+  Building2,
 } from "lucide-react";
 import { supabase } from "../../supabaseClient";
 
@@ -56,6 +59,8 @@ interface AnamnesisRow {
   condicoes_saude: string | null;
   possui_plano_saude: boolean;
   status: StatusValue;
+  cpf: string | null;
+  department: string | null;
 }
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -132,7 +137,7 @@ const StatusBadge: React.FC<{ status: StatusValue }> = ({ status }) => {
 /** Loading skeleton row */
 const SkeletonRow: React.FC<{ opacity: number }> = ({ opacity }) => (
   <tr style={{ opacity }}>
-    {Array.from({ length: 6 }).map((_, i) => (
+    {Array.from({ length: 7 }).map((_, i) => (
       <td key={i} className="px-4 py-3.5 first:pl-6 last:pr-6">
         <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded-md animate-pulse"
           style={{ width: `${60 + (i % 3) * 20}%` }} />
@@ -178,6 +183,114 @@ const Field: React.FC<{ label: string; value: React.ReactNode; prose?: boolean }
     )}
   </div>
 );
+
+// ─── FilterDropdown ───────────────────────────────────────────────────────────
+
+interface DropdownOption {
+  value: string;
+  label: string;
+  count?: number;
+  dotCls?: string;
+}
+
+const FilterDropdown: React.FC<{
+  value: string;
+  options: DropdownOption[];
+  onChange: (v: string) => void;
+  icon?: React.ReactNode;
+}> = ({ value, options, onChange, icon }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find((o) => o.value === value) ?? options[0];
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="
+          flex items-center gap-1.5 py-2 pl-3 pr-2.5 text-sm rounded-xl
+          border border-gray-200 dark:border-gray-600
+          bg-white dark:bg-gray-700
+          text-gray-700 dark:text-gray-200
+          hover:border-gray-300 dark:hover:border-gray-500
+          focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400
+          transition-all duration-200 whitespace-nowrap
+        "
+      >
+        {icon}
+        {selected.dotCls && <span className={`w-2 h-2 rounded-full ${selected.dotCls}`} />}
+        <span>{selected.label}</span>
+        {selected.count !== undefined && selected.value !== "all" && (
+          <span className="text-xs font-semibold text-white bg-blue-500 rounded-full px-1.5 py-0.5 leading-none ml-0.5">
+            {selected.count}
+          </span>
+        )}
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ml-0.5 ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="dd"
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.14 } }}
+            exit={{ opacity: 0, y: -4, scale: 0.97, transition: { duration: 0.1 } }}
+            className="
+              absolute left-0 top-full mt-1.5 z-30 min-w-[175px]
+              bg-white dark:bg-gray-800
+              border border-gray-100 dark:border-gray-700
+              rounded-xl shadow-xl shadow-black/10
+              py-1.5 overflow-hidden
+            "
+          >
+            {options.map((opt) => {
+              const active = opt.value === value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => { onChange(opt.value); setOpen(false); }}
+                  className={[
+                    "w-full flex items-center gap-2 px-3.5 py-2 text-sm transition-colors duration-100",
+                    active
+                      ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700",
+                  ].join(" ")}
+                >
+                  {opt.dotCls && <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dotCls}`} />}
+                  <span className="flex-1 text-left">{opt.label}</span>
+                  {opt.count !== undefined && (
+                    <span className={`text-xs px-1.5 py-0.5 rounded-md font-semibold ${
+                      active
+                        ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                    }`}>
+                      {opt.count}
+                    </span>
+                  )}
+                  {active && <CheckCircle className="w-3.5 h-3.5 shrink-0 ml-1" />}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 // ─── Detail Drawer ────────────────────────────────────────────────────────────
 
@@ -343,6 +456,15 @@ const DetailDrawer: React.FC<DrawerProps> = ({
                     label="Estado Civil"
                     value={ESTADO_CIVIL_LABEL[row.estado_civil] ?? capitalize(row.estado_civil)}
                   />
+                  {row.cpf && (
+                    <Field
+                      label="CPF"
+                      value={row.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}
+                    />
+                  )}
+                  {row.department && (
+                    <Field label="Departamento" value={row.department} />
+                  )}
                   <Field
                     label="Plano de Saúde"
                     value={
@@ -416,13 +538,14 @@ const DetailDrawer: React.FC<DrawerProps> = ({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function AdminColaboradoresView() {
-  const [rows, setRows]               = useState<AnamnesisRow[]>([]);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState<string | null>(null);
-  const [search, setSearch]           = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | StatusValue>("all");
-  const [drawerRow, setDrawerRow]     = useState<AnamnesisRow | null>(null);
-  const [updatingId, setUpdatingId]   = useState<string | null>(null);
+  const [rows, setRows]                     = useState<AnamnesisRow[]>([]);
+  const [loading, setLoading]               = useState(true);
+  const [error, setError]                   = useState<string | null>(null);
+  const [search, setSearch]                 = useState("");
+  const [statusFilter, setStatusFilter]     = useState<"all" | StatusValue>("all");
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all");
+  const [drawerRow, setDrawerRow]           = useState<AnamnesisRow | null>(null);
+  const [updatingId, setUpdatingId]         = useState<string | null>(null);
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
 
@@ -453,8 +576,27 @@ export default function AdminColaboradoresView() {
       r.nome_completo.toLowerCase().includes(q) ||
       r.email.toLowerCase().includes(q);
     const matchStatus = statusFilter === "all" || r.status === statusFilter;
-    return matchSearch && matchStatus;
+    const matchDept   = departmentFilter === "all" || r.department === departmentFilter;
+    return matchSearch && matchStatus && matchDept;
   });
+
+  // ── Department stats (derived from all rows, not filtered) ─────────────────
+
+  const departments = useMemo(
+    () =>
+      Array.from(
+        new Set(rows.map((r) => r.department).filter(Boolean) as string[]),
+      ).sort(),
+    [rows],
+  );
+
+  const deptCounts = useMemo(() => {
+    const c: Record<string, number> = {};
+    rows.forEach((r) => {
+      if (r.department) c[r.department] = (c[r.department] ?? 0) + 1;
+    });
+    return c;
+  }, [rows]);
 
   // ── Status update ──────────────────────────────────────────────────────────
 
@@ -590,23 +732,16 @@ export default function AdminColaboradoresView() {
                 </div>
 
                 {/* Status filter */}
-                <select
+                <FilterDropdown
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-                  className="
-                    py-2 pl-3 pr-7 text-sm rounded-xl
-                    border border-gray-200 dark:border-gray-600
-                    bg-white dark:bg-gray-700
-                    text-gray-700 dark:text-gray-200
-                    focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400
-                    transition-all duration-200
-                  "
-                >
-                  <option value="all">Todos os status</option>
-                  <option value="pendente">Pendente</option>
-                  <option value="em_analise">Em Análise</option>
-                  <option value="contatado">Contatado</option>
-                </select>
+                  onChange={(v) => setStatusFilter(v as typeof statusFilter)}
+                  options={[
+                    { value: "all",        label: "Todos os status",  count: rows.length },
+                    { value: "pendente",   label: "Pendente",         count: rows.filter((r) => r.status === "pendente").length,   dotCls: "bg-yellow-400" },
+                    { value: "em_analise", label: "Em Análise",       count: rows.filter((r) => r.status === "em_analise").length, dotCls: "bg-blue-500"   },
+                    { value: "contatado",  label: "Contatado",        count: rows.filter((r) => r.status === "contatado").length,  dotCls: "bg-green-500"  },
+                  ]}
+                />
 
                 {/* Refresh */}
                 <button
@@ -629,6 +764,66 @@ export default function AdminColaboradoresView() {
             </div>
           </div>
 
+          {/* Department completion bar */}
+          {!loading && departments.length > 0 && (
+            <div className="
+              px-6 py-3 border-b border-gray-100 dark:border-gray-700
+              bg-gray-50/60 dark:bg-gray-800/60
+            ">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest shrink-0">
+                  Preencheram por depto
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setDepartmentFilter("all")}
+                  className={[
+                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all duration-150",
+                    departmentFilter === "all"
+                      ? "bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/25"
+                      : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700",
+                  ].join(" ")}
+                >
+                  Todos
+                  <span className={`text-[10px] font-bold px-1 py-0.5 rounded-full ${
+                    departmentFilter === "all"
+                      ? "bg-white/20 text-white"
+                      : "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                  }`}>
+                    {rows.length}
+                  </span>
+                </button>
+                {departments.map((dept) => {
+                  const active = departmentFilter === dept;
+                  const count  = deptCounts[dept] ?? 0;
+                  return (
+                    <button
+                      key={dept}
+                      type="button"
+                      onClick={() => setDepartmentFilter(active ? "all" : dept)}
+                      className={[
+                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all duration-150",
+                        active
+                          ? "bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-500/25"
+                          : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-indigo-300 dark:hover:border-indigo-700",
+                      ].join(" ")}
+                    >
+                      <Building2 className="w-3 h-3 shrink-0" />
+                      {dept}
+                      <span className={`text-[10px] font-bold px-1 py-0.5 rounded-full ${
+                        active
+                          ? "bg-white/20 text-white"
+                          : "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                      }`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Loading skeletons */}
           {loading && (
             <div className="overflow-x-auto">
@@ -642,21 +837,20 @@ export default function AdminColaboradoresView() {
             </div>
           )}
 
-          {/* Empty state */}
-          {!loading && !error && filtered.length === 0 && (
+              {!loading && !error && filtered.length === 0 && (
             <div className="flex flex-col items-center gap-3 py-16 text-center px-4">
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center
                 bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500">
                 <ClipboardList className="w-7 h-7" />
               </div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                {search || statusFilter !== "all"
+                {search || statusFilter !== "all" || departmentFilter !== "all"
                   ? "Nenhuma anamnese encontrada com esses filtros."
                   : "Nenhuma anamnese recebida ainda."}
               </p>
-              {(search || statusFilter !== "all") && (
+              {(search || statusFilter !== "all" || departmentFilter !== "all") && (
                 <button
-                  onClick={() => { setSearch(""); setStatusFilter("all"); }}
+                  onClick={() => { setSearch(""); setStatusFilter("all"); setDepartmentFilter("all"); }}
                   className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                 >
                   Limpar filtros
@@ -671,7 +865,7 @@ export default function AdminColaboradoresView() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-gray-700">
-                    {["Data", "Nome", "E-mail", "Plano", "Status", ""].map(
+                    {["Data", "Nome", "E-mail", "Depto", "Plano", "Status", ""].map(
                       (col) => (
                         <th
                           key={col}
@@ -715,6 +909,13 @@ export default function AdminColaboradoresView() {
                       <td className="px-4 py-3.5 text-gray-600 dark:text-gray-300 max-w-[200px]">
                         <span className="truncate block" title={row.email}>
                           {row.email}
+                        </span>
+                      </td>
+
+                      {/* Depto */}
+                      <td className="px-4 py-3.5 text-gray-500 dark:text-gray-400 max-w-[140px]">
+                        <span className="truncate block" title={row.department ?? undefined}>
+                          {row.department ?? "—"}
                         </span>
                       </td>
 
