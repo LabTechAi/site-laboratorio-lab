@@ -1275,7 +1275,7 @@ export default function AnamnesisModal({ isOpen, onClose }: Props) {
                                 <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2">
                                   Métricas Corporais{" "}
                                   <span className="text-gray-400 dark:text-gray-500 normal-case tracking-normal font-normal">
-                                    (opcional)
+                                    (% de gordura se houver bioimpedância recente)
                                   </span>
                                 </p>
                                 <div className="grid grid-cols-3 gap-2">
@@ -1302,14 +1302,19 @@ export default function AnamnesisModal({ isOpen, onClose }: Props) {
                                   Informe apenas os valores numéricos.
                                 </p>
                               </div>
-                              <FTextarea
-                                id="an-cond"
-                                label="Condições de Saúde"
-                                rows={3}
-                                hint="Existe alguma condição ou diagnóstico que devemos saber? Ex.: hipertensão, diabetes, ansiedade..."
-                                value={form.condicoesSaude}
-                                onChange={(v) => patch("condicoesSaude", v)}
-                              />
+                              <div>
+                                <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2">
+                                  Histórico de Saúde
+                                </p>
+                                <FTextarea
+                                  id="an-cond"
+                                  label="Condições de Saúde"
+                                  rows={3}
+                                  hint="Existe alguma condição ou diagnóstico que devemos saber? Ex.: hipertensão, diabetes, ansiedade..."
+                                  value={form.condicoesSaude}
+                                  onChange={(v) => patch("condicoesSaude", v)}
+                                />
+                              </div>
 
                               {/* Plano de saúde */}
                               <div>

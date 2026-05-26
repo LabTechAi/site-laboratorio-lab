@@ -41,8 +41,8 @@ function buildWhatsAppUrl(row: ConsultationRow): string {
     : formatDate(row.created_at);
   const message =
     `Olá ${row.nome}, sou do LAB Laboratório e Medicina Diagnóstica. ` +
-    `Entramos em contato sobre sua solicitação de consulta com o Patologista (${ref}). ` +
-    `Podemos te ajudar?`;
+    `Entramos em contato sobre sua solicitação de contato com o Patologista (${ref}). ` +
+    `Como podemos te ajudar?`;
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
 
