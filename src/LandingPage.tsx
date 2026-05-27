@@ -488,7 +488,7 @@ const ExamCard: React.FC<ExamGroupData & { colorIndex: number; query: string }> 
   // Reset expansion whenever the search query changes
   useEffect(() => { setExpanded(false); }, [query]);
 
-  const visibleItems = needsExpand && !expanded ? items.slice(0, COLLAPSE_THRESHOLD) : items;
+  const visibleItems = needsExpand ? items.slice(0, COLLAPSE_THRESHOLD) : items;
   const extraCount = items.length - COLLAPSE_THRESHOLD;
 
   return (
