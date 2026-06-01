@@ -2,13 +2,14 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2, LogOut, RefreshCw, Users, ShieldCheck, AlertCircle,
-  HeartPulse, Microscope, Building2,
+  HeartPulse, Microscope, Building2, Sun, Moon,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase, WaitlistRow } from "../../supabaseClient";
 import AdminAuth from "../../components/AdminAuth";
 import AdminPathologistViews from "./AdminPathologistViews";
 import AdminColaboradoresView from "./AdminColaboradoresView";
+import { useTheme } from "../../context/ThemeContext";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatDate(iso: string): string {
@@ -211,6 +212,7 @@ const AdminDashboard: React.FC<{ email: string; onSignOut: () => void }> = ({
   onSignOut,
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>("colaboradores");
+  const { isDark, toggleTheme } = useTheme();
 
   const activeGroup = NAV.find((g) => g.tabs.some((t) => t.id === activeTab))!;
   const subTabs     = activeGroup.tabs.length > 1 ? activeGroup.tabs : null;
@@ -232,34 +234,27 @@ const AdminDashboard: React.FC<{ email: string; onSignOut: () => void }> = ({
       ">
 
         {/* Main bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8
           h-[62px] flex items-center justify-between gap-4">
 
           {/* Brand */}
           <div className="flex items-center gap-2.5 shrink-0">
-            <div className="
-              w-8 h-8 rounded-[10px] flex items-center justify-center
-              bg-gradient-to-br from-blue-500 to-indigo-600
-              shadow-sm shadow-blue-500/25 ring-1 ring-blue-500/15
-            ">
-              <ShieldCheck className="w-[15px] h-[15px] text-white" />
-            </div>
             <img
               src="/assets/logo/LOGO-HOR.svg"
               alt="LAB"
-              className="h-6 w-auto object-contain dark:hidden"
+              className="h-10 w-auto object-contain dark:hidden"
               draggable={false}
             />
             <img
               src="/assets/logo/LOGO-HOR-DM.svg"
               alt="LAB"
-              className="h-6 w-auto object-contain hidden dark:block"
+              className="h-10 w-auto object-contain hidden dark:block"
               draggable={false}
             />
             <span className="
               hidden sm:flex items-center gap-1.5
               text-[11px] font-bold uppercase tracking-[0.08em]
-              text-gray-400 dark:text-gray-500
+              text-gray-600 dark:text-gray-500
             ">
               <span className="h-3.5 w-px bg-gray-200 dark:bg-gray-700 rounded-full" />
               Admin
@@ -318,6 +313,34 @@ const AdminDashboard: React.FC<{ email: string; onSignOut: () => void }> = ({
 
           {/* User + sign-out */}
           <div className="flex items-center gap-2 shrink-0">
+            {/* Theme toggle */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.93 }}
+              onClick={toggleTheme}
+              aria-label={isDark ? "Alternar para modo claro" : "Alternar para modo escuro"}
+              className="
+                w-9 h-9 flex items-center justify-center rounded-xl
+                bg-gray-100/80 dark:bg-white/[0.06]
+                ring-1 ring-black/[0.04] dark:ring-white/[0.06]
+                text-gray-600 dark:text-gray-300
+                hover:bg-gray-200 dark:hover:bg-white/[0.12]
+                transition-colors duration-150
+              "
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={isDark ? "moon" : "sun"}
+                  initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+                  animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                  exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                >
+                  {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                </motion.span>
+              </AnimatePresence>
+            </motion.button>
+
             <div className="
               hidden lg:flex items-center gap-1.5 pl-2 pr-3 py-1.5 rounded-xl
               bg-gray-100/80 dark:bg-white/[0.05]
@@ -453,7 +476,7 @@ const AdminDashboard: React.FC<{ email: string; onSignOut: () => void }> = ({
       </header>
 
       {/* Page content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}

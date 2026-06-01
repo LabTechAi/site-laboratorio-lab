@@ -20,6 +20,9 @@ import Home from "./pages/Home";
 import Parceiros from "./pages/Parceiros";
 import Admin from "./pages/Admin";
 import Colaboradores from "./pages/Colaboradores";
+import MedicalWorkspace from "./pages/Admin/MedicalWorkspace";
+import FirstConsultationForm from "./pages/Admin/FirstConsultationForm";
+import FollowUpConsultationForm from "./pages/Admin/FollowUpConsultationForm";
 
 /** Layout used by all "institutional" pages — Header + content + Footer + floating widgets. */
 function MainLayout() {
@@ -53,6 +56,9 @@ export default function App() {
             <Route path="/parceiros" element={<Parceiros />} />
             <Route path="/colaboradores" element={<Colaboradores />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/atendimento/:anamnesis_id" element={<MedicalWorkspace />} />
+            <Route path="/admin/atendimento/:anamnesis_id/primeira-consulta" element={<FirstConsultationForm />} />
+            <Route path="/admin/atendimento/:anamnesis_id/consulta-retorno" element={<FollowUpConsultationForm />} />
           </Routes>
         </BrowserRouter>
       </AccessibilityProvider>

@@ -19,6 +19,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   X,
@@ -35,6 +36,8 @@ import {
   KeyRound,
   Eye,
   EyeOff,
+  Check,
+  Calendar,
 } from "lucide-react";
 import { supabase } from "../supabaseClient";
 
@@ -247,7 +250,285 @@ const FTextarea: React.FC<FTextareaProps> = ({
   );
 };
 
-// ─── DateDropdown (Dia / Mês / Ano selects estilizados) ───────────────────
+// ─── PremiumSelect ────────────────────────────────────────────────────────
+
+interface PremiumSelectOption {
+  value: string;
+  label: string;
+}
+
+interface PremiumSelectProps {
+  options: PremiumSelectOption[];
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  label: string;
+  error?: string;
+  ariaLabel: string;
+  icon?: React.ReactNode;
+}
+
+const PremiumSelect: React.FC<PremiumSelectProps> = ({
+  options, value, onChange, placeholder, label, error, ariaLabel, icon,
+}) => {
+  const [open, setOpen] = useState(false);
+  const [highlighted, setHighlighted] = useState(-1);
+  const [search, setSearch] = useState("");
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 });
+
+  const selected = options.find((o) => o.value === value);
+
+  const filteredOptions = search
+    ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()))
+    : options;
+
+  const calcPos = useCallback(() => {
+    if (!triggerRef.current) return;
+    const r = triggerRef.current.getBoundingClientRect();
+    setPos({ top: r.bottom + 6, left: r.left, width: r.width });
+  }, []);
+
+  const handleOpen = useCallback(() => {
+    calcPos();
+    setOpen(true);
+    setSearch("");
+    const idx = options.findIndex((o) => o.value === value);
+    setHighlighted(idx >= 0 ? idx : -1);
+    setTimeout(() => searchRef.current?.focus(), 50);
+  }, [calcPos, options, value]);
+
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    setHighlighted(-1);
+    setSearch("");
+  }, []);
+
+  const handleSelect = useCallback((v: string) => {
+    onChange(v);
+    handleClose();
+    triggerRef.current?.focus();
+  }, [onChange, handleClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handle = (e: MouseEvent) => {
+      if (
+        triggerRef.current?.contains(e.target as Node) ||
+        listRef.current?.contains(e.target as Node)
+      ) return;
+      handleClose();
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [open, handleClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleScroll = (e: Event) => {
+      if (listRef.current?.contains(e.target as Node)) return;
+      handleClose();
+    };
+    const handleResize = () => handleClose();
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [open, handleClose]);
+
+  useEffect(() => {
+    if (open && highlighted >= 0 && listRef.current) {
+      const ul = listRef.current.querySelector("ul");
+      const item = ul?.children[highlighted] as HTMLElement;
+      item?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [highlighted, open]);
+
+  useEffect(() => {
+    setHighlighted(filteredOptions.length > 0 ? 0 : -1);
+  }, [search]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!open) {
+      if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+        e.preventDefault();
+        handleOpen();
+      }
+      return;
+    }
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setHighlighted((h) => Math.min(h + 1, filteredOptions.length - 1));
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setHighlighted((h) => Math.max(h - 1, 0));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (highlighted >= 0 && filteredOptions[highlighted]) {
+          handleSelect(filteredOptions[highlighted].value);
+        }
+        break;
+      case "Escape":
+        e.preventDefault();
+        handleClose();
+        break;
+    }
+  };
+
+  const triggerCls = [
+    "w-full px-3.5 py-3 rounded-xl border text-sm outline-none cursor-pointer",
+    "flex items-center gap-2",
+    "bg-white dark:bg-gray-800",
+    "transition-all duration-200",
+    selected ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500",
+    error
+      ? "border-red-400 dark:border-red-500 ring-1 ring-red-400/30"
+      : open
+        ? "border-blue-400 dark:border-blue-500 ring-2 ring-blue-500/20 shadow-sm"
+        : "border-slate-200 dark:border-gray-600 hover:border-slate-300 dark:hover:border-gray-500",
+  ].join(" ");
+
+  return (
+    <div className="relative">
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => (open ? handleClose() : handleOpen())}
+        onKeyDown={handleKeyDown}
+        aria-label={ariaLabel}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        className={triggerCls}
+      >
+        {icon && (
+          <span className={`shrink-0 transition-colors duration-200 ${open || selected ? "text-blue-500 dark:text-blue-400" : "text-gray-300 dark:text-gray-600"}`}>
+            {icon}
+          </span>
+        )}
+        <span className="flex-1 text-left truncate font-medium">
+          {selected ? selected.label : placeholder}
+        </span>
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
+          className="shrink-0"
+        >
+          <ChevronDown className={`w-3.5 h-3.5 transition-colors duration-200 ${open ? "text-blue-500 dark:text-blue-400" : "text-gray-400"}`} />
+        </motion.span>
+      </button>
+
+      {open && createPortal(
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}
+            className="pointer-events-auto"
+          >
+            <div
+              ref={listRef}
+              className="
+                rounded-xl overflow-hidden
+                bg-white dark:bg-gray-800
+                border border-slate-200 dark:border-gray-700
+                shadow-xl shadow-black/10 dark:shadow-black/40
+              "
+            >
+              <div className="p-2 border-b border-slate-100 dark:border-gray-700">
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Buscar..."
+                  aria-label="Buscar opção"
+                  className="
+                    w-full px-3 py-2 rounded-lg text-sm outline-none
+                    bg-gray-50 dark:bg-gray-900
+                    text-gray-900 dark:text-gray-100
+                    placeholder:text-gray-400 dark:placeholder:text-gray-500
+                    border border-transparent
+                    focus:border-blue-400 dark:focus:border-blue-500
+                    focus:bg-white dark:focus:bg-gray-800
+                    transition-all duration-150
+                  "
+                />
+              </div>
+              <ul
+                role="listbox"
+                aria-label={ariaLabel}
+                className="
+                  max-h-56 overflow-y-auto
+                  py-1.5 outline-none
+                  scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700
+                "
+              >
+                {filteredOptions.length === 0 ? (
+                  <li className="px-3.5 py-4 text-center text-sm text-gray-400 dark:text-gray-500">
+                    Nenhuma opção encontrada
+                  </li>
+                ) : (
+                  filteredOptions.map((opt, i) => {
+                    const isSelected = opt.value === value;
+                    const isHighlighted = i === highlighted;
+                    return (
+                      <motion.li
+                        key={opt.value}
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.12, delay: Math.min(i * 0.015, 0.12) }}
+                        role="option"
+                        aria-selected={isSelected}
+                        onClick={() => handleSelect(opt.value)}
+                        onMouseEnter={() => setHighlighted(i)}
+                        className={[
+                          "flex items-center gap-2.5 px-3.5 py-2.5 mx-1.5 rounded-lg cursor-pointer",
+                          "text-sm font-medium transition-all duration-150",
+                          isSelected
+                            ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                            : isHighlighted
+                              ? "bg-gray-50 dark:bg-gray-700/60 text-gray-900 dark:text-gray-100"
+                              : "text-gray-700 dark:text-gray-300",
+                        ].join(" ")}
+                      >
+                        <span className="flex-1 truncate">{opt.label}</span>
+                        <AnimatePresence>
+                          {isSelected && (
+                            <motion.span
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0, opacity: 0 }}
+                              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                            >
+                              <Check className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                      </motion.li>
+                    );
+                  })
+                )}
+              </ul>
+            </div>
+          </motion.div>
+        </AnimatePresence>,
+        document.body,
+      )}
+    </div>
+  );
+};
+
+// ─── DateDropdown (Dia / Mês / Ano — Premium) ────────────────────────────
 
 const MONTHS_PT = [
   { v: "01", l: "Janeiro" },  { v: "02", l: "Fevereiro" },
@@ -265,7 +546,7 @@ const DAYS_LIST    = Array.from({ length: 31 }, (_, i) =>
 );
 
 interface DateDropdownProps {
-  value: string;   // "YYYY-MM-DD" or ""
+  value: string;
   onChange: (v: string) => void;
   required?: boolean;
   error?: string;
@@ -276,7 +557,6 @@ const DateDropdown: React.FC<DateDropdownProps> = ({ value, onChange, required, 
   const [month, setMonth] = useState(value ? value.slice(5, 7)  : "");
   const [year,  setYear]  = useState(value ? value.slice(0, 4)  : "");
 
-  // Reset internal state when parent clears the value (e.g., form reset)
   useEffect(() => {
     if (!value) { setDay(""); setMonth(""); setYear(""); }
   }, [value]);
@@ -285,73 +565,53 @@ const DateDropdown: React.FC<DateDropdownProps> = ({ value, onChange, required, 
     onChange(d && m && y ? `${y}-${m}-${d}` : "");
   };
 
-  const selCls = (hasVal: boolean) =>
-    [
-      "w-full pl-3 pr-8 py-3 rounded-xl border text-sm outline-none appearance-none cursor-pointer",
-      "bg-white dark:bg-gray-800",
-      "transition-all duration-200",
-      hasVal ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500",
-      error
-        ? "border-red-400 dark:border-red-500 ring-1 ring-red-400/30"
-        : "border-slate-200 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20",
-    ].join(" ");
+  const dayOptions   = DAYS_LIST.map((d) => ({ value: d, label: d }));
+  const monthOptions = MONTHS_PT.map(({ v, l }) => ({ value: v, label: l }));
+  const yearOptions  = BIRTH_YEARS.map((y) => ({ value: String(y), label: String(y) }));
 
   return (
     <div>
-      <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2">
+      <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+        <Calendar className="w-3 h-3" />
         Data de Nascimento{required && " *"}
       </p>
       <div className="grid grid-cols-3 gap-2">
-        {/* Dia */}
-        <div className="relative">
-          <select
-            value={day}
-            onChange={(e) => { const v = e.target.value; setDay(v); commit(v, month, year); }}
-            aria-label="Dia de nascimento"
-            className={selCls(!!day)}
-          >
-            <option value="">Dia</option>
-            {DAYS_LIST.map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-        </div>
-
-        {/* Mês */}
-        <div className="relative">
-          <select
-            value={month}
-            onChange={(e) => { const v = e.target.value; setMonth(v); commit(day, v, year); }}
-            aria-label="Mês de nascimento"
-            className={selCls(!!month)}
-          >
-            <option value="">Mês</option>
-            {MONTHS_PT.map(({ v, l }) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-        </div>
-
-        {/* Ano */}
-        <div className="relative">
-          <select
-            value={year}
-            onChange={(e) => { const v = e.target.value; setYear(v); commit(day, month, v); }}
-            aria-label="Ano de nascimento"
-            className={selCls(!!year)}
-          >
-            <option value="">Ano</option>
-            {BIRTH_YEARS.map((y) => (
-              <option key={y} value={String(y)}>{y}</option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-        </div>
+        <PremiumSelect
+          options={dayOptions}
+          value={day}
+          onChange={(v) => { setDay(v); commit(v, month, year); }}
+          placeholder="Dia"
+          label="Dia"
+          error={error}
+          ariaLabel="Dia de nascimento"
+        />
+        <PremiumSelect
+          options={monthOptions}
+          value={month}
+          onChange={(v) => { setMonth(v); commit(day, v, year); }}
+          placeholder="Mês"
+          label="Mês"
+          error={error}
+          ariaLabel="Mês de nascimento"
+        />
+        <PremiumSelect
+          options={yearOptions}
+          value={year}
+          onChange={(v) => { setYear(v); commit(day, month, v); }}
+          placeholder="Ano"
+          label="Ano"
+          error={error}
+          ariaLabel="Ano de nascimento"
+        />
       </div>
       {error && (
-        <p className="mt-1 text-xs text-red-500 dark:text-red-400 pl-1">{error}</p>
+        <motion.p
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-1.5 text-xs text-red-500 dark:text-red-400 pl-1"
+        >
+          {error}
+        </motion.p>
       )}
     </div>
   );
@@ -1257,7 +1517,7 @@ export default function AnamnesisModal({ isOpen, onClose }: Props) {
                               />
                               <FTextarea
                                 id="an-imp"
-                                label="Por que sua participação neste projeto é importante?"
+                                label="Por que para você é importante participar deste projeto?"
                                 required
                                 rows={4}
                                 hint="Conte o que espera aprender, melhorar ou alcançar com o programa."

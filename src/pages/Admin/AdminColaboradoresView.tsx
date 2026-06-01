@@ -21,6 +21,7 @@ import React, {
   useRef,
   useMemo,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   RefreshCw,
@@ -39,6 +40,7 @@ import {
   FileText,
   Loader2,
   Building2,
+  Stethoscope,
 } from "lucide-react";
 import { supabase } from "../../supabaseClient";
 
@@ -546,6 +548,7 @@ export default function AdminColaboradoresView() {
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [drawerRow, setDrawerRow]           = useState<AnamnesisRow | null>(null);
   const [updatingId, setUpdatingId]         = useState<string | null>(null);
+  const navigate = useNavigate();
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
 
@@ -865,15 +868,16 @@ export default function AdminColaboradoresView() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-gray-700">
-                    {["Data", "Nome", "E-mail", "Depto", "Plano", "Status", ""].map(
+                    {["Data", "Nome", "E-mail", "Depto", "Plano", "Status", "Ações"].map(
                       (col) => (
                         <th
                           key={col}
-                          className="
-                            px-4 py-3 text-left text-xs font-semibold
+                          className={`
+                            px-4 py-3 text-xs font-semibold
                             text-gray-500 dark:text-gray-400 uppercase tracking-wide
-                            first:pl-6 last:pr-6 last:text-right
-                          "
+                            first:pl-6 last:pr-6 whitespace-nowrap
+                            ${col === "Ações" ? "text-right" : "text-left"}
+                          `}
                         >
                           {col}
                         </th>
@@ -974,21 +978,39 @@ export default function AdminColaboradoresView() {
 
                       {/* Ações */}
                       <td className="px-4 py-3.5 pr-6 text-right">
-                        <button
-                          onClick={() => setDrawerRow(row)}
-                          className="
-                            inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold
-                            text-blue-600 dark:text-blue-400
-                            bg-blue-50 dark:bg-blue-900/20
-                            hover:bg-blue-100 dark:hover:bg-blue-900/40
-                            border border-blue-100 dark:border-blue-800/40
-                            transition-all duration-150
-                            opacity-0 group-hover:opacity-100
-                          "
-                        >
-                          Ver detalhes
-                          <ChevronRight className="w-3 h-3" />
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => navigate(`/admin/atendimento/${row.id}`)}
+                            className="
+                              inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold
+                              text-emerald-600 dark:text-emerald-400
+                              bg-emerald-50 dark:bg-emerald-900/20
+                              hover:bg-emerald-100 dark:hover:bg-emerald-900/40
+                              border border-emerald-100 dark:border-emerald-800/40
+                              transition-all duration-150
+                              opacity-0 group-hover:opacity-100
+                            "
+                            title="Iniciar prontuário médico"
+                          >
+                            <Stethoscope className="w-3 h-3" />
+                            Iniciar Prontuário
+                          </button>
+                          <button
+                            onClick={() => setDrawerRow(row)}
+                            className="
+                              inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold
+                              text-blue-600 dark:text-blue-400
+                              bg-blue-50 dark:bg-blue-900/20
+                              hover:bg-blue-100 dark:hover:bg-blue-900/40
+                              border border-blue-100 dark:border-blue-800/40
+                              transition-all duration-150
+                              opacity-0 group-hover:opacity-100
+                            "
+                          >
+                            Ver detalhes
+                            <ChevronRight className="w-3 h-3" />
+                          </button>
+                        </div>
                       </td>
                     </motion.tr>
                   ))}

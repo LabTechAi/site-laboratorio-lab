@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   RefreshCw, Search, X, CheckCircle, RotateCcw,
   MessageCircle, AlertCircle, Loader2, Users, ChevronDown,
+  Eye, Phone, Calendar, FileText, Hash,
 } from "lucide-react";
 import { supabase } from "../../supabaseClient";
 
@@ -29,7 +30,7 @@ function formatDate(iso: string): string {
   }).format(new Date(iso));
 }
 
-function truncate(text: string, max = 80): string {
+function truncate(text: string, max = 55): string {
   return text.length > max ? text.slice(0, max) + "…" : text;
 }
 
@@ -61,11 +62,11 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => (
 
 // ─── Row tooltip for full message ─────────────────────────────────────────────
 const MessageCell: React.FC<{ text: string }> = ({ text }) => (
-  <span
-    className="block max-w-[200px] cursor-default"
-    title={text}
-  >
-    {truncate(text)}
+  <span className="flex items-center gap-1.5 max-w-[180px]">
+    <span className="truncate text-xs text-gray-600 dark:text-gray-400">{truncate(text)}</span>
+    {text.length > 55 && (
+      <Eye className="w-3 h-3 text-gray-300 dark:text-gray-600 shrink-0" />
+    )}
   </span>
 );
 
@@ -177,6 +178,200 @@ const FilterDropdown: React.FC<{
   );
 };
 
+// ─── Detail Modal ───────────────────────────────────────────────────────────────
+
+interface DetailModalProps {
+  row: ConsultationRow | null;
+  onClose: () => void;
+  onToggleStatus: (row: ConsultationRow) => Promise<void>;
+  togglingId: string | null;
+}
+
+const DetailModal: React.FC<DetailModalProps> = ({ row, onClose, onToggleStatus, togglingId }) => {
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (row) {
+      const t = setTimeout(() => closeRef.current?.focus(), 80);
+      return () => clearTimeout(t);
+    }
+  }, [row]);
+
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", h);
+    return () => document.removeEventListener("keydown", h);
+  }, [onClose]);
+
+  return (
+    <AnimatePresence>
+      {row && (
+        <>
+          <motion.div
+            key="pat-bd"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.22 } }}
+            exit={{ opacity: 0, transition: { duration: 0.18 } }}
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+            aria-hidden="true"
+            onClick={onClose}
+          />
+
+          <motion.aside
+            key="pat-panel"
+            initial={{ x: "100%" }}
+            animate={{ x: 0, transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } }}
+            exit={{ x: "100%", transition: { duration: 0.22, ease: "easeIn" } }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pat-detail-title"
+            className="
+              fixed right-0 top-0 h-full z-50
+              w-full sm:w-[480px] lg:w-[520px]
+              bg-white dark:bg-gray-900
+              shadow-2xl shadow-black/20
+              flex flex-col
+            "
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="
+              shrink-0 flex items-start justify-between gap-4
+              px-6 py-5
+              border-b border-gray-100 dark:border-gray-700
+              bg-gradient-to-r from-indigo-50 via-blue-50/50 to-transparent
+              dark:from-indigo-900/20 dark:via-transparent
+            ">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-0.5">
+                  Solicitação de Consulta
+                </p>
+                <h2 id="pat-detail-title" className="text-lg font-extrabold text-gray-900 dark:text-gray-100 truncate">
+                  {row.nome}
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  {formatDate(row.created_at)}
+                </p>
+              </div>
+              <button
+                ref={closeRef}
+                onClick={onClose}
+                aria-label="Fechar painel"
+                className="
+                  shrink-0 w-8 h-8 flex items-center justify-center rounded-full
+                  bg-white dark:bg-gray-800
+                  border border-gray-200 dark:border-gray-700
+                  text-gray-500 dark:text-gray-400
+                  hover:bg-gray-100 dark:hover:bg-gray-700
+                  transition-colors duration-150
+                "
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Status + actions */}
+            <div className="shrink-0 px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Status:</span>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                  row.status === "respondido"
+                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                    : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${row.status === "respondido" ? "bg-green-500" : "bg-yellow-400"}`} />
+                  {row.status === "respondido" ? "Respondido" : "Pendente"}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => void onToggleStatus(row)}
+                  disabled={togglingId === row.id}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 disabled:opacity-50 ${
+                    row.status === "pendente"
+                      ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40"
+                      : "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
+                  }`}
+                >
+                  {togglingId === row.id ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : row.status === "pendente" ? (
+                    <CheckCircle className="w-3.5 h-3.5" />
+                  ) : (
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  )}
+                  {row.status === "pendente" ? "Marcar Respondido" : "Marcar Pendente"}
+                </button>
+
+                <a
+                  href={buildWhatsAppUrl(row)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-500 hover:bg-green-600 text-white transition-colors duration-200"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                </a>
+              </div>
+            </div>
+
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+              {/* Contact info */}
+              <div>
+                <div className="flex items-center gap-2 pb-2 mb-3 border-b border-gray-100 dark:border-gray-700">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+                    <Phone className="w-3.5 h-3.5" />
+                  </div>
+                  <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Contato</h3>
+                </div>
+                <div className="grid grid-cols-1 gap-3">
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">E-mail</p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{row.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Telefone</p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{row.telefone}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Nº Exame</p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100 flex items-center gap-1">
+                      <Hash className="w-3 h-3 text-gray-400" />
+                      {row.numero_exame ?? <span className="text-gray-300 dark:text-gray-600 italic">Não informado</span>}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message */}
+              <div>
+                <div className="flex items-center gap-2 pb-2 mb-3 border-b border-gray-100 dark:border-gray-700">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                    <MessageCircle className="w-3.5 h-3.5" />
+                  </div>
+                  <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Mensagem</h3>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                    {row.mensagem}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="shrink-0 px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/60 text-xs text-gray-400 dark:text-gray-500 flex items-center justify-between">
+              <span>ID: {row.id.slice(0, 8)}</span>
+              <span>Enviado em {formatDate(row.created_at)}</span>
+            </div>
+          </motion.aside>
+        </>
+      )}
+    </AnimatePresence>
+  );
+};
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function AdminPathologistViews() {
   const [rows, setRows]             = useState<ConsultationRow[]>([]);
@@ -185,6 +380,7 @@ export default function AdminPathologistViews() {
   const [search, setSearch]         = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pendente" | "respondido">("all");
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [detailRow, setDetailRow]   = useState<ConsultationRow | null>(null);
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchRows = useCallback(async () => {
@@ -245,7 +441,8 @@ export default function AdminPathologistViews() {
   const respondedCount  = rows.filter((r) => r.status === "respondido").length;
 
   return (
-    <div className="space-y-5">
+    <>
+      <div className="space-y-5">
 
       {/* ── Summary cards ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -409,9 +606,7 @@ export default function AdminPathologistViews() {
                   {["Data", "Nome", "Contato", "Nº Exame", "Mensagem", "Status", "Ações"].map((col) => (
                     <th
                       key={col}
-                      className="px-4 py-3 text-left text-xs font-semibold
-                        text-gray-500 dark:text-gray-400 uppercase tracking-wide
-                        first:pl-6 last:pr-6"
+                      className={`px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide first:pl-6 last:pr-6 whitespace-nowrap ${col === "Ações" ? "text-right" : "text-left"}`}
                     >
                       {col}
                     </th>
@@ -422,7 +617,11 @@ export default function AdminPathologistViews() {
                 {filtered.map((row) => (
                   <tr
                     key={row.id}
-                    className="hover:bg-slate-50 dark:hover:bg-gray-700/40 transition-colors duration-150"
+                    onClick={() => setDetailRow(row)}
+                    className="
+                      hover:bg-slate-50 dark:hover:bg-gray-700/40
+                      transition-colors duration-150 cursor-pointer group
+                    "
                   >
                     {/* Data */}
                     <td className="px-4 py-3.5 pl-6 text-gray-500 dark:text-gray-400 whitespace-nowrap text-xs">
@@ -456,14 +655,14 @@ export default function AdminPathologistViews() {
                     </td>
 
                     {/* Ações */}
-                    <td className="px-4 py-3.5 pr-6">
-                      <div className="flex items-center gap-2">
+                    <td className="px-4 py-3.5 pr-6 whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-2">
                         {/* Toggle status */}
                         <button
-                          onClick={() => void toggleStatus(row)}
+                          onClick={(e) => { e.stopPropagation(); void toggleStatus(row); }}
                           disabled={togglingId === row.id}
                           title={row.status === "pendente" ? "Marcar como Respondido" : "Marcar como Pendente"}
-                          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium
+                          className={`flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium min-w-[92px]
                             transition-all duration-200 disabled:opacity-50
                             ${row.status === "pendente"
                               ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40"
@@ -487,8 +686,9 @@ export default function AdminPathologistViews() {
                           href={buildWhatsAppUrl(row)}
                           target="_blank"
                           rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
                           title="Abrir WhatsApp"
-                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium
+                          className="flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium min-w-[90px]
                             bg-green-500 hover:bg-green-600 text-white
                             transition-colors duration-200"
                         >
@@ -511,6 +711,15 @@ export default function AdminPathologistViews() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+
+      {/* Detail modal */}
+      <DetailModal
+        row={detailRow}
+        onClose={() => setDetailRow(null)}
+        onToggleStatus={toggleStatus}
+        togglingId={togglingId}
+      />
+    </>
   );
 }
