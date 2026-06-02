@@ -125,11 +125,11 @@ const MvvCard: React.FC<{ icon: string; iconAlt: string; title: string; children
     whileHover={{ y: -5 }}
     transition={{ type: "spring", stiffness: 300, damping: 24 }}
     className="group relative px-[30px] py-[40px] rounded-2xl text-center
-      bg-white/70 dark:bg-gray-800/50
+      bg-white/80 dark:bg-gray-800/60
       backdrop-blur-[14px]
-      border border-white/80 dark:border-white/10
-      shadow-xl shadow-slate-900/5 dark:shadow-black/20
-      hover:shadow-2xl hover:shadow-blue-500/10 dark:hover:shadow-blue-500/10
+      border border-slate-200/50 dark:border-white/10
+      shadow-lg shadow-slate-900/10 dark:shadow-black/30
+      hover:shadow-xl hover:shadow-slate-900/15 dark:hover:shadow-black/40
       hover:border-blue-300/60 dark:hover:border-blue-500/40
       transition-all duration-300 overflow-hidden"
   >
@@ -138,6 +138,12 @@ const MvvCard: React.FC<{ icon: string; iconAlt: string; title: string; children
       group-hover:from-blue-500/5 group-hover:to-indigo-500/5
       dark:group-hover:from-blue-500/10 dark:group-hover:to-indigo-500/10
       transition-all duration-500 pointer-events-none" />
+    {/* Borda shimmer */}
+    <div className="absolute inset-0 rounded-2xl pointer-events-none
+      bg-gradient-to-br from-blue-400/0 via-blue-500/20 to-indigo-500/0
+      dark:from-blue-400/0 dark:via-blue-500/30 dark:to-indigo-500/0
+      opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+      style={{ padding: "1px", WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", WebkitMaskComposite: "xor", maskComposite: "exclude" }} />
     {/* Ícone real — envolto em anel sutil */}
     <div className="relative w-20 h-20 mx-auto mb-5
       rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50
@@ -167,7 +173,7 @@ const MvvCard: React.FC<{ icon: string; iconAlt: string; title: string; children
 export default function AboutSection() {
   return (
     <section id="sobre" className="py-16 md:py-20 bg-white dark:bg-gray-900">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
 
         {/* ── Vídeo institucional ─────────────────────────────────────── */}
         <motion.div
@@ -240,42 +246,6 @@ export default function AboutSection() {
           </motion.p>
         </motion.div>
 
-        {/* ── Cards Missão / Visão / Valores ──────────────────────────── */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.15 }}
-          variants={stagger}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5
-            rounded-3xl p-6 sm:p-8
-            bg-gradient-to-br from-slate-100/80 via-blue-50/40 to-indigo-50/60
-            dark:from-gray-900 dark:via-gray-800/60 dark:to-gray-900
-            border border-slate-200/60 dark:border-white/5"
-        >
-          {/* Missão */}
-          <MvvCard icon="/assets/misaão_visao_valores/MISSAO.svg" iconAlt="Ícone de Missão" title="MISSÃO">
-            <p className="text-[15px] leading-[1.8] text-slate-600 dark:text-gray-300 text-justify">
-              Promover a saúde vista de perto, unindo excelência técnica, cuidado humano e inovação para oferecer diagnósticos precisos e uma experiência de confiança, prevenção e bem-estar.
-            </p>
-          </MvvCard>
-
-          {/* Visão */}
-          <MvvCard icon="/assets/misaão_visao_valores/VISAO.svg" iconAlt="Ícone de Visão" title="VISÃO">
-            <p className="text-[15px] leading-[1.8] text-slate-600 dark:text-gray-300 text-justify">
-              Ser referência em medicina diagnóstica no Brasil, ampliando continuamente nosso ecossistema de soluções em saúde, guiados pela precisão científica, pela empatia no cuidado e pela coragem de evoluir.
-            </p>
-          </MvvCard>
-
-          {/* Valores */}
-          <MvvCard icon="/assets/misaão_visao_valores/VALORES.svg" iconAlt="Ícone de Valores" title="VALORES">
-            <div className="flex flex-col gap-[10px] mt-5 text-left">
-              {VALUES.map((v) => (
-                <ValorItem key={v.title} icon={v.icon} title={v.title} body={v.body} />
-              ))}
-            </div>
-          </MvvCard>
-        </motion.div>
-
         {/* ── Texto final + Banner 50 anos ─────────────────────────── */}
         <div className="space-y-5">
           <motion.div
@@ -312,6 +282,38 @@ export default function AboutSection() {
             />
           </motion.div>
         </div>
+
+        {/* ── Cards Missão / Visão / Valores ──────────────────────────── */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          variants={stagger}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {/* Missão */}
+          <MvvCard icon="/assets/misaão_visao_valores/MISSAO.svg" iconAlt="Ícone de Missão" title="MISSÃO">
+            <p className="text-[15px] leading-[1.8] text-slate-600 dark:text-gray-300 text-center">
+              Promover a saúde vista de perto, unindo excelência técnica, cuidado humano e inovação para oferecer diagnósticos precisos e uma experiência de confiança, prevenção e bem-estar.
+            </p>
+          </MvvCard>
+
+          {/* Visão */}
+          <MvvCard icon="/assets/misaão_visao_valores/VISAO.svg" iconAlt="Ícone de Visão" title="VISÃO">
+            <p className="text-[15px] leading-[1.8] text-slate-600 dark:text-gray-300 text-center">
+              Ser referência em medicina diagnóstica no Brasil, ampliando continuamente nosso ecossistema de soluções em saúde, guiados pela precisão científica, pela empatia no cuidado e pela coragem de evoluir.
+            </p>
+          </MvvCard>
+
+          {/* Valores */}
+          <MvvCard icon="/assets/misaão_visao_valores/VALORES.svg" iconAlt="Ícone de Valores" title="VALORES">
+            <div className="flex flex-col gap-[10px] mt-5 text-left">
+              {VALUES.map((v) => (
+                <ValorItem key={v.title} icon={v.icon} title={v.title} body={v.body} />
+              ))}
+            </div>
+          </MvvCard>
+        </motion.div>
       </div>
     </section>
   );

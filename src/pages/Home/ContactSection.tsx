@@ -49,7 +49,7 @@ export default function ContactSection() {
         bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900
         dark:from-gray-950 dark:via-gray-900 dark:to-gray-950"
     >
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
         <motion.div

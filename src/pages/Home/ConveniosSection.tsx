@@ -360,7 +360,7 @@ export default function ConveniosSection() {
         bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20
         dark:from-gray-900 dark:via-gray-900 dark:to-gray-900"
     >
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
         <motion.div
@@ -368,7 +368,7 @@ export default function ConveniosSection() {
           whileInView="visible"
           viewport={{ once: true, amount: 0.5 }}
           variants={stagger}
-          className="text-center mb-10"
+          className="text-center mb-12"
         >
           <motion.span
             variants={fadeInUp}
