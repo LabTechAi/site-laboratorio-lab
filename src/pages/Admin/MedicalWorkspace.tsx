@@ -20,6 +20,9 @@ import {
   Sparkles,
   Sun,
   Moon,
+  History,
+  Search,
+  Clock,
 } from "lucide-react";
 import { supabase } from "../../supabaseClient";
 import { supabaseDb } from "../../supabaseDbClient";
@@ -54,6 +57,24 @@ interface PatientProfile {
   escolaridade: string | null;
   profissao: string | null;
   religiao: string | null;
+  created_at: string;
+}
+
+interface MedicalConsultation {
+  id: string;
+  profile_id: string;
+  doctor_id: string | null;
+  tipo_consulta: string | null;
+  comorbidades: string | null;
+  medicacoes_uso_continuo: string | null;
+  queixa_principal: string | null;
+  historia_doenca_atual: string | null;
+  historia_patologica_pregressa: string | null;
+  historia_familiar: string | null;
+  hipoteses_diagnosticas: string | null;
+  conduta: string | null;
+  evolucao_efeitos: string | null;
+  evolucao_adesao: string | null;
   created_at: string;
 }
 
@@ -432,6 +453,294 @@ const HubCard: React.FC<HubCardProps> = ({
   </motion.button>
 );
 
+// ─── History Modal Component ───────────────────────────────────────────────────
+
+interface HistoryModalProps {
+  consultations: MedicalConsultation[];
+  loading: boolean;
+  onClose: () => void;
+}
+
+const TIPO_LABEL: Record<string, string> = {
+  primeira: "Primeira Consulta",
+  retorno: "Consulta de Retorno",
+};
+
+const HistoryModal: React.FC<HistoryModalProps> = ({ consultations, loading, onClose }) => {
+  const [search, setSearch] = useState("");
+
+  const filtered = search.trim()
+    ? consultations.filter((c) => {
+        const q = search.toLowerCase();
+        const fields = [
+          c.tipo_consulta && TIPO_LABEL[c.tipo_consulta],
+          c.queixa_principal,
+          c.hipoteses_diagnosticas,
+          c.conduta,
+          c.comorbidades,
+          c.medicacoes_uso_continuo,
+          c.historia_doenca_atual,
+          c.historia_patologica_pregressa,
+          c.historia_familiar,
+          c.evolucao_efeitos,
+          c.evolucao_adesao,
+        ];
+        return fields.some((f) => f && f.toLowerCase().includes(q));
+      })
+    : consultations;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        key="history-modal-overlay"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh] overflow-y-auto"
+        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      >
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+
+        {/* Modal */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 20 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className="relative z-10 w-full max-w-3xl
+            bg-white/90 dark:bg-gray-900/90
+            backdrop-blur-2xl
+            rounded-3xl
+            border border-white/60 dark:border-gray-800/60
+            shadow-2xl shadow-black/10 dark:shadow-black/40
+            overflow-hidden"
+        >
+          {/* Header */}
+          <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-700/60
+            bg-gradient-to-r from-amber-50 via-orange-50 to-rose-50
+            dark:from-gray-800 dark:via-gray-800 dark:to-gray-800
+            flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center
+                bg-gradient-to-br from-amber-500 to-orange-600
+                shadow-lg shadow-amber-500/20">
+                <History className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg font-extrabold text-gray-900 dark:text-gray-100">
+                  Histórico de Consultas
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {consultations.length} registro{consultations.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-9 h-9 flex items-center justify-center rounded-xl
+                bg-gray-100 dark:bg-gray-700
+                text-gray-500 dark:text-gray-400
+                hover:bg-gray-200 dark:hover:bg-gray-600
+                transition-colors duration-150"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Search */}
+          <div className="px-6 py-3 border-b border-gray-100 dark:border-gray-700/60
+            bg-gray-50/50 dark:bg-gray-800/30">
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Filtrar consultas por queixa, diagnóstico, conduta..."
+                className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl
+                  bg-white dark:bg-gray-800
+                  border border-gray-200 dark:border-gray-600
+                  text-gray-800 dark:text-gray-100
+                  placeholder:text-gray-400 dark:placeholder:text-gray-500
+                  focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/40
+                  transition-all duration-200"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2
+                    text-gray-400 hover:text-gray-600 dark:hover:text-gray-300
+                    transition-colors duration-150"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="max-h-[60vh] overflow-y-auto p-6">
+            {loading ? (
+              <div className="flex flex-col items-center gap-4 py-16">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                  className="w-8 h-8 rounded-full border-2 border-amber-500 border-t-transparent"
+                />
+                <p className="text-sm text-gray-400 dark:text-gray-500 font-medium">
+                  Carregando consultas...
+                </p>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 py-16 text-center">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center
+                  bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500">
+                  <History className="w-7 h-7" />
+                </div>
+                {search ? (
+                  <>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      Nenhuma consulta para "{search}"
+                    </p>
+                    <button
+                      onClick={() => setSearch("")}
+                      className="text-xs text-blue-500 dark:text-blue-400 hover:underline font-medium"
+                    >
+                      Limpar busca
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    Nenhuma consulta registrada
+                  </p>
+                )}
+              </div>
+            ) : (
+              <motion.div layout className="space-y-3">
+                {/* Filter badge */}
+                {search && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-4"
+                  >
+                    <span className="px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30
+                      text-amber-700 dark:text-amber-300 font-medium">
+                      Filtro: "{search}"
+                    </span>
+                    <span>
+                      {filtered.length} de {consultations.length} consulta{consultations.length !== 1 ? "s" : ""}
+                    </span>
+                  </motion.div>
+                )}
+                <AnimatePresence>
+                  {filtered.map((c, i) => (
+                    <motion.div
+                      key={c.id}
+                      layout
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.25, ease: "easeOut", delay: i * 0.04 }}
+                      className="rounded-2xl border border-gray-100 dark:border-gray-700/60
+                        bg-white dark:bg-gray-800/50
+                        hover:shadow-md hover:border-amber-200/60 dark:hover:border-amber-500/20
+                        transition-all duration-200 overflow-hidden"
+                    >
+                      {/* Timeline dot + header */}
+                      <div className="flex items-start gap-4 p-5">
+                        <div className="relative flex flex-col items-center shrink-0">
+                          <div className={`w-3 h-3 rounded-full border-2 ${
+                            c.tipo_consulta === "primeira"
+                              ? "bg-emerald-400 border-emerald-400 shadow-sm shadow-emerald-400/40"
+                              : "bg-violet-400 border-violet-400 shadow-sm shadow-violet-400/40"
+                          }`} />
+                          <div className="w-px flex-1 bg-gray-200 dark:bg-gray-700 mt-1 min-h-[20px]" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${
+                              c.tipo_consulta === "primeira"
+                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                                : "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300"
+                            }`}>
+                              {TIPO_LABEL[c.tipo_consulta ?? ""] ?? c.tipo_consulta ?? "Consulta"}
+                            </span>
+                            <span className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500">
+                              <Clock className="w-3 h-3" />
+                              {formatDate(c.created_at)}
+                            </span>
+                          </div>
+
+                          {/* Fields */}
+                          <div className="space-y-2.5">
+                            {c.queixa_principal && (
+                              <div>
+                                <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">
+                                  Queixa Principal
+                                </p>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                  {c.queixa_principal}
+                                </p>
+                              </div>
+                            )}
+                            {c.hipoteses_diagnosticas && (
+                              <div>
+                                <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">
+                                  Hipóteses Diagnósticas
+                                </p>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                  {c.hipoteses_diagnosticas}
+                                </p>
+                              </div>
+                            )}
+                            {c.conduta && (
+                              <div>
+                                <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">
+                                  Conduta
+                                </p>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                  {c.conduta}
+                                </p>
+                              </div>
+                            )}
+                            {c.evolucao_efeitos && (
+                              <div>
+                                <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">
+                                  Evolução — Efeitos
+                                </p>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                  {c.evolucao_efeitos}
+                                </p>
+                              </div>
+                            )}
+                            {c.evolucao_adesao && (
+                              <div>
+                                <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">
+                                  Evolução — Adesão
+                                </p>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                  {c.evolucao_adesao}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 // ─── Main Workspace ─────────────────────────────────────────────────────────────
 
 function MedicalWorkspaceContent() {
@@ -444,6 +753,9 @@ function MedicalWorkspaceContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showDrawer, setShowDrawer] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [consultations, setConsultations] = useState<MedicalConsultation[]>([]);
+  const [consultationsLoading, setConsultationsLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!anamnesis_id) return;
@@ -484,6 +796,32 @@ function MedicalWorkspaceContent() {
   }, [anamnesis_id]);
 
   useEffect(() => { void fetchData(); }, [fetchData]);
+
+  // ── Fetch consultations for history ────────────────────────────────────────
+  const fetchConsultations = useCallback(async () => {
+    if (!profile?.id) return;
+    setConsultationsLoading(true);
+    try {
+      const { data, error: consultErr } = await supabaseDb
+        .from("medical_consultations")
+        .select("*")
+        .eq("profile_id", profile.id)
+        .order("created_at", { ascending: true });
+
+      if (!consultErr && data) {
+        setConsultations(data as MedicalConsultation[]);
+      }
+    } catch {
+      // DB query may fail silently
+    } finally {
+      setConsultationsLoading(false);
+    }
+  }, [profile]);
+
+  const handleOpenHistory = useCallback(() => {
+    setShowHistoryModal(true);
+    void fetchConsultations();
+  }, [fetchConsultations]);
 
   // ── Loading ───────────────────────────────────────────────────────────────────
 
@@ -634,7 +972,7 @@ function MedicalWorkspaceContent() {
                 </span>
               </div>
 
-              {/* Name + status */}
+              {/* Name + status + actions */}
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
                 <div>
                   <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">
@@ -646,24 +984,40 @@ function MedicalWorkspaceContent() {
                   </p>
                 </div>
 
-                <span className={`
-                  self-start sm:self-center inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider
-                  ${anamnesis.status === "pendente"
-                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
-                    : anamnesis.status === "em_analise"
-                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                      : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                  }
-                `}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${
-                    anamnesis.status === "pendente"
-                      ? "bg-yellow-400"
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleOpenHistory}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold
+                      text-amber-700 dark:text-amber-300
+                      bg-amber-50 dark:bg-amber-900/20
+                      hover:bg-amber-100 dark:hover:bg-amber-900/40
+                      border border-amber-200 dark:border-amber-800/40
+                      transition-all duration-200
+                      active:scale-[0.98]"
+                    title="Ver histórico de consultas"
+                  >
+                    <History className="w-4 h-4" />
+                    <span className="hidden sm:inline">Histórico</span>
+                  </button>
+                  <span className={`
+                    inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider
+                    ${anamnesis.status === "pendente"
+                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
                       : anamnesis.status === "em_analise"
-                        ? "bg-blue-500"
-                        : "bg-green-500"
-                  }`} />
+                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                        : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                    }
+                  `}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${
+                      anamnesis.status === "pendente"
+                        ? "bg-yellow-400"
+                        : anamnesis.status === "em_analise"
+                          ? "bg-blue-500"
+                          : "bg-green-500"
+                    }`} />
                   {anamnesis.status === "pendente" ? "Pendente" : anamnesis.status === "em_analise" ? "Em Análise" : "Contatado"}
                 </span>
+                </div>
               </div>
 
               {/* Info pills */}
@@ -774,6 +1128,15 @@ function MedicalWorkspaceContent() {
           profile={profile}
           onClose={() => setShowDrawer(false)}
         />
+
+        {/* History modal */}
+        {showHistoryModal && (
+          <HistoryModal
+            consultations={consultations}
+            loading={consultationsLoading}
+            onClose={() => setShowHistoryModal(false)}
+          />
+        )}
       </div>
   );
 }

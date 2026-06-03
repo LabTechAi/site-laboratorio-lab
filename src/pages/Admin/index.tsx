@@ -1,15 +1,22 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2, LogOut, RefreshCw, Users, ShieldCheck, AlertCircle,
-  HeartPulse, Microscope, Building2, Sun, Moon,
+  HeartPulse, Microscope, Building2, Sun, Moon, Stethoscope,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase, WaitlistRow } from "../../supabaseClient";
+import { supabaseAuth } from "../../supabaseAuthClient";
 import AdminAuth from "../../components/AdminAuth";
 import AdminPathologistViews from "./AdminPathologistViews";
 import AdminColaboradoresView from "./AdminColaboradoresView";
+import AdminMedicosView from "./AdminMedicosView";
 import { useTheme } from "../../context/ThemeContext";
+
+const ALLOWED_MEDICAL_ROLE_IDS = [
+  "6cd20adb-9c9f-485f-bd17-f893a22f14c1",
+  "cbb11266-d7b0-41b8-960c-3bd5cd529492",
+];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatDate(iso: string): string {
@@ -179,32 +186,38 @@ const WaitlistTab: React.FC = () => {
 };
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
-type Tab = "colaboradores" | "parceiros" | "patologista";
+type Tab = "colaboradores" | "parceiros" | "medicos" | "patologista";
 
 interface NavTab   { id: Tab;    label: string; Icon: React.ElementType; }
 interface NavGroup { id: string; label: string; Icon: React.ElementType; tabs: NavTab[]; defaultTab: Tab; }
 
-const NAV: NavGroup[] = [
-  {
-    id: "saude",
-    label: "Saúde Preventiva",
-    Icon: HeartPulse,
-    defaultTab: "colaboradores",
-    tabs: [
-      { id: "colaboradores", label: "Colaboradores", Icon: Users     },
-      { id: "parceiros",     label: "Parceiros",     Icon: Building2 },
-    ],
-  },
-  {
-    id: "patologista",
-    label: "Patologista",
-    Icon: Microscope,
-    defaultTab: "patologista",
-    tabs: [
-      { id: "patologista", label: "Consultas", Icon: Microscope },
-    ],
-  },
-];
+function buildNav(includeMedicos: boolean): NavGroup[] {
+  const saudeTabs: NavTab[] = [
+    { id: "colaboradores", label: "Colaboradores", Icon: Users     },
+    { id: "parceiros",     label: "Parceiros",     Icon: Building2 },
+  ];
+  if (includeMedicos) {
+    saudeTabs.push({ id: "medicos", label: "Médicos", Icon: Stethoscope });
+  }
+  return [
+    {
+      id: "saude",
+      label: "Saúde Preventiva",
+      Icon: HeartPulse,
+      defaultTab: "colaboradores",
+      tabs: saudeTabs,
+    },
+    {
+      id: "patologista",
+      label: "Patologista",
+      Icon: Microscope,
+      defaultTab: "patologista",
+      tabs: [
+        { id: "patologista", label: "Consultas", Icon: Microscope },
+      ],
+    },
+  ];
+}
 
 // ─── Authenticated dashboard ──────────────────────────────────────────────────
 const AdminDashboard: React.FC<{ email: string; onSignOut: () => void }> = ({
@@ -212,7 +225,50 @@ const AdminDashboard: React.FC<{ email: string; onSignOut: () => void }> = ({
   onSignOut,
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>("colaboradores");
+  const [medicalAuthChecked, setMedicalAuthChecked] = useState(false);
+  const [medicalAuthorized, setMedicalAuthorized] = useState(false);
   const { isDark, toggleTheme } = useTheme();
+  const { user } = useAuth();
+
+  // ── Medical role check ─────────────────────────────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+    async function check() {
+      if (!user) return;
+      try {
+        const { data, error: dbError } = await supabaseAuth
+          .from("user_profiles")
+          .select("role, custom_role_id")
+          .eq("id", user.id)
+          .single();
+        if (cancelled) return;
+        if (dbError) {
+          setMedicalAuthorized(false);
+        } else {
+          const hasAllowedRole =
+            data.custom_role_id &&
+            ALLOWED_MEDICAL_ROLE_IDS.includes(data.custom_role_id);
+          const isAdmin = data.role === "admin";
+          setMedicalAuthorized(hasAllowedRole || isAdmin);
+        }
+      } catch {
+        if (!cancelled) setMedicalAuthorized(false);
+      } finally {
+        if (!cancelled) setMedicalAuthChecked(true);
+      }
+    }
+    check();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const NAV = useMemo(() => buildNav(medicalAuthorized), [medicalAuthorized]);
+
+  // Redirect away from "medicos" if not authorized
+  useEffect(() => {
+    if (medicalAuthChecked && !medicalAuthorized && activeTab === "medicos") {
+      setActiveTab("colaboradores");
+    }
+  }, [medicalAuthChecked, medicalAuthorized, activeTab]);
 
   const activeGroup = NAV.find((g) => g.tabs.some((t) => t.id === activeTab))!;
   const subTabs     = activeGroup.tabs.length > 1 ? activeGroup.tabs : null;
@@ -489,6 +545,8 @@ const AdminDashboard: React.FC<{ email: string; onSignOut: () => void }> = ({
               <AdminColaboradoresView />
             ) : activeTab === "parceiros" ? (
               <WaitlistTab />
+            ) : activeTab === "medicos" ? (
+              <AdminMedicosView />
             ) : (
               <AdminPathologistViews />
             )}
