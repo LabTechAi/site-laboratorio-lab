@@ -17,12 +17,12 @@ import {
   ShieldCheck,
   AlertCircle,
   IdCard,
-  Sparkles,
   Sun,
   Moon,
   History,
   Search,
   Clock,
+  FileHeart,
 } from "lucide-react";
 import { supabase } from "../../supabaseClient";
 import { supabaseDb } from "../../supabaseDbClient";
@@ -65,6 +65,15 @@ interface MedicalConsultation {
   profile_id: string;
   doctor_id: string | null;
   tipo_consulta: string | null;
+  pa_sistolica: string | null;
+  pa_diastolica: string | null;
+  fc: string | null;
+  saturacao: string | null;
+  sono: string | null;
+  apetite: string | null;
+  tabagismo: string | null;
+  etilismo: string | null;
+  atividade_fisica: string | null;
   comorbidades: string | null;
   medicacoes_uso_continuo: string | null;
   queixa_principal: string | null;
@@ -484,6 +493,15 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ consultations, loading, onC
           c.historia_familiar,
           c.evolucao_efeitos,
           c.evolucao_adesao,
+          c.pa_sistolica,
+          c.pa_diastolica,
+          c.fc,
+          c.saturacao,
+          c.sono,
+          c.apetite,
+          c.tabagismo,
+          c.etilismo,
+          c.atividade_fisica,
         ];
         return fields.some((f) => f && f.toLowerCase().includes(q));
       })
@@ -676,6 +694,50 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ consultations, loading, onC
 
                           {/* Fields */}
                           <div className="space-y-2.5">
+                            {/* Sinais Vitais */}
+                            {(c.pa_sistolica || c.pa_diastolica || c.fc || c.saturacao) && (
+                              <div className="rounded-xl bg-gray-50/70 dark:bg-gray-700/30 p-3 grid grid-cols-2 gap-2">
+                                {(c.pa_sistolica || c.pa_diastolica) && (
+                                  <div>
+                                    <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">PA</p>
+                                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{c.pa_sistolica ?? "—"} × {c.pa_diastolica ?? "—"} mmHg</p>
+                                  </div>
+                                )}
+                                {c.fc && (
+                                  <div>
+                                    <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">FC</p>
+                                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{c.fc} bpm</p>
+                                  </div>
+                                )}
+                                {c.saturacao && (
+                                  <div>
+                                    <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">Saturação</p>
+                                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{c.saturacao}%</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            {/* Hábitos */}
+                            {(c.sono || c.apetite || c.tabagismo || c.etilismo || c.atividade_fisica) && (
+                              <div className="rounded-xl bg-gray-50/70 dark:bg-gray-700/30 p-3 space-y-2">
+                                <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Hábitos</p>
+                                {c.sono && (
+                                  <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed"><span className="font-semibold text-gray-500 dark:text-gray-500">Sono:</span> {c.sono}</p>
+                                )}
+                                {c.apetite && (
+                                  <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed"><span className="font-semibold text-gray-500 dark:text-gray-500">Apetite:</span> {c.apetite}</p>
+                                )}
+                                {c.tabagismo && (
+                                  <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed"><span className="font-semibold text-gray-500 dark:text-gray-500">Tabagismo:</span> {c.tabagismo}</p>
+                                )}
+                                {c.etilismo && (
+                                  <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed"><span className="font-semibold text-gray-500 dark:text-gray-500">Etilismo:</span> {c.etilismo}</p>
+                                )}
+                                {c.atividade_fisica && (
+                                  <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed"><span className="font-semibold text-gray-500 dark:text-gray-500">Atividade Física:</span> {c.atividade_fisica}</p>
+                                )}
+                              </div>
+                            )}
                             {c.queixa_principal && (
                               <div>
                                 <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">
@@ -966,7 +1028,7 @@ function MedicalWorkspaceContent() {
             <div className="relative z-10">
               {/* Super-title */}
               <div className="inline-flex items-center gap-1.5 mb-4 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800/40">
-                <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                <FileHeart className="w-3.5 h-3.5 text-blue-500" />
                 <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
                   Prontuário Médico
                 </span>

@@ -20,6 +20,8 @@ import {
   RefreshCw,
   Sun,
   Moon,
+  HeartPulse,
+  Activity,
 } from "lucide-react";
 import { supabase } from "../../supabaseClient";
 import { supabaseDb } from "../../supabaseDbClient";
@@ -38,6 +40,15 @@ interface AnamnesisRow {
 interface FirstConsultation {
   id: string;
   profile_id: string;
+  pa_sistolica: string | null;
+  pa_diastolica: string | null;
+  fc: string | null;
+  saturacao: string | null;
+  sono: string | null;
+  apetite: string | null;
+  tabagismo: string | null;
+  etilismo: string | null;
+  atividade_fisica: string | null;
   comorbidades: string | null;
   medicacoes_uso_continuo: string | null;
   queixa_principal: string | null;
@@ -54,6 +65,15 @@ interface PatientProfile {
 }
 
 interface FormState {
+  pa_sistolica: string;
+  pa_diastolica: string;
+  fc: string;
+  saturacao: string;
+  sono: string;
+  apetite: string;
+  tabagismo: string;
+  etilismo: string;
+  atividade_fisica: string;
   medicacoes_uso_continuo: string;
   evolucao_efeitos: string;
   evolucao_adesao: "total" | "parcial" | "nao_houve" | "";
@@ -64,6 +84,15 @@ interface FormState {
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 const INITIAL_FORM: FormState = {
+  pa_sistolica: "",
+  pa_diastolica: "",
+  fc: "",
+  saturacao: "",
+  sono: "",
+  apetite: "",
+  tabagismo: "",
+  etilismo: "",
+  atividade_fisica: "",
   medicacoes_uso_continuo: "",
   evolucao_efeitos: "",
   evolucao_adesao: "",
@@ -361,6 +390,7 @@ export default function FollowUpConsultationForm() {
   const [error, setError] = useState<string | null>(null);
   const [showLeftPanel, setShowLeftPanel] = useState(true);
   const leftPanelRef = useRef<HTMLDivElement>(null);
+  const diastolicRef = useRef<HTMLInputElement>(null);
 
   // ── Fetch data ─────────────────────────────────────────────────────────────
 
@@ -437,6 +467,15 @@ export default function FollowUpConsultationForm() {
         .insert({
           profile_id: profileId,
           tipo_consulta: "retorno",
+          pa_sistolica: form.pa_sistolica.trim() || null,
+          pa_diastolica: form.pa_diastolica.trim() || null,
+          fc: form.fc.trim() || null,
+          saturacao: form.saturacao.trim() || null,
+          sono: form.sono.trim() || null,
+          apetite: form.apetite.trim() || null,
+          tabagismo: form.tabagismo.trim() || null,
+          etilismo: form.etilismo.trim() || null,
+          atividade_fisica: form.atividade_fisica.trim() || null,
           medicacoes_uso_continuo: form.medicacoes_uso_continuo.trim() || null,
           evolucao_efeitos: form.evolucao_efeitos.trim() || null,
           evolucao_adesao: form.evolucao_adesao || null,
@@ -683,6 +722,50 @@ export default function FollowUpConsultationForm() {
 
                     {/* First consultation fields — read-only */}
                     <div className="space-y-5">
+                      {/* Sinais Vitais */}
+                      {(firstConsult.pa_sistolica || firstConsult.pa_diastolica || firstConsult.fc || firstConsult.saturacao) && (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <HeartPulse className="w-3.5 h-3.5 text-red-400" />
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sinais Vitais</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            {(firstConsult.pa_sistolica || firstConsult.pa_diastolica) && (
+                              <ROField label="PA (mmHg)" value={`${firstConsult.pa_sistolica ?? "—"} × ${firstConsult.pa_diastolica ?? "—"}`} />
+                            )}
+                            {firstConsult.fc && (
+                              <ROField label="FC (bpm)" value={firstConsult.fc} />
+                            )}
+                            {firstConsult.saturacao && (
+                              <ROField label="Saturação (%)" value={firstConsult.saturacao} />
+                            )}
+                          </div>
+                        </>
+                      )}
+                      {/* Hábitos */}
+                      {(firstConsult.sono || firstConsult.apetite || firstConsult.tabagismo || firstConsult.etilismo || firstConsult.atividade_fisica) && (
+                        <>
+                          <div className="flex items-center gap-2 pt-1">
+                            <Activity className="w-3.5 h-3.5 text-orange-400" />
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Hábitos</span>
+                          </div>
+                          {firstConsult.sono && (
+                            <ROField label="Sono" value={firstConsult.sono} prose />
+                          )}
+                          {firstConsult.apetite && (
+                            <ROField label="Apetite" value={firstConsult.apetite} prose />
+                          )}
+                          {firstConsult.tabagismo && (
+                            <ROField label="Tabagismo" value={firstConsult.tabagismo} prose />
+                          )}
+                          {firstConsult.etilismo && (
+                            <ROField label="Etilismo" value={firstConsult.etilismo} prose />
+                          )}
+                          {firstConsult.atividade_fisica && (
+                            <ROField label="Atividade Física" value={firstConsult.atividade_fisica} prose />
+                          )}
+                        </>
+                      )}
                       {firstConsult.queixa_principal && (
                         <ROField label="Queixa Principal" value={firstConsult.queixa_principal} prose />
                       )}
@@ -775,6 +858,151 @@ export default function FollowUpConsultationForm() {
                   <div>
                     <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">E-mail</p>
                     <p className="text-sm font-bold text-gray-800 dark:text-gray-100 truncate">{anamnesis?.email ?? "—"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* ═════════════════════════════════════════════════ */}
+              {/* SINAIS VITAIS E EXAME FÍSICO */}
+              {/* ═════════════════════════════════════════════════ */}
+
+              <div className="rounded-2xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-white/80 dark:border-gray-800/60 shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.15)] p-5 sm:p-7">
+                <div className="flex items-center gap-3 mb-5 pb-3 border-b border-slate-200/60 dark:border-gray-700/60">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 shrink-0">
+                    <HeartPulse className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-gray-800 dark:text-gray-100">Sinais Vitais e Exame Físico</h2>
+                    <p className="text-[11px] text-gray-400 dark:text-gray-500">Aferições do atendimento</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* PA — campo duplo */}
+                  <div>
+                    <label className="block text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2 ml-1">
+                      PA (mmHg)
+                    </label>
+                    <div className="flex items-stretch rounded-xl border border-slate-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 overflow-hidden hover:border-slate-300 dark:hover:border-gray-600 focus-within:border-blue-400 dark:focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/15 transition-all duration-200">
+                      <div className="flex-1 flex flex-col justify-center px-3 py-1.5">
+                        <span className="text-[9px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide leading-none">sistólica</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={3}
+                          id="fu-pa-sistolica"
+                          value={form.pa_sistolica}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/\D/g, "").slice(0, 3);
+                            patch("pa_sistolica", v);
+                            if (v.length === 3) diastolicRef.current?.focus();
+                          }}
+                          placeholder="120"
+                          className="w-full text-sm border-none outline-none bg-transparent text-gray-900 dark:text-gray-100 caret-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500 py-0"
+                        />
+                      </div>
+                      <span className="shrink-0 w-px bg-slate-200 dark:bg-gray-700" />
+                      <div className="flex-1 flex flex-col justify-center px-3 py-1.5">
+                        <span className="text-[9px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide leading-none">diastólica</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={3}
+                          ref={diastolicRef}
+                          id="fu-pa-diastolica"
+                          value={form.pa_diastolica}
+                          onChange={(e) => patch("pa_diastolica", e.target.value.replace(/\D/g, "").slice(0, 3))}
+                          placeholder="80"
+                          className="w-full text-sm border-none outline-none bg-transparent text-gray-900 dark:text-gray-100 caret-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500 py-0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {/* FC */}
+                  <div>
+                    <label htmlFor="fu-fc" className="block text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2 ml-1">
+                      FC (bpm)
+                    </label>
+                    <input
+                      type="text"
+                      id="fu-fc"
+                      value={form.fc}
+                      onChange={(e) => patch("fc", e.target.value)}
+                      placeholder="Ex: 72"
+                      className="w-full px-4 py-2.5 text-sm rounded-xl border outline-none bg-white/80 dark:bg-gray-800/80 border-slate-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 caret-blue-500 hover:border-slate-300 dark:hover:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all duration-200"
+                    />
+                  </div>
+                  {/* Saturação */}
+                  <div>
+                    <label htmlFor="fu-saturacao" className="block text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2 ml-1">
+                      Saturação (%)
+                    </label>
+                    <input
+                      type="text"
+                      id="fu-saturacao"
+                      value={form.saturacao}
+                      onChange={(e) => patch("saturacao", e.target.value)}
+                      placeholder="Ex: 98"
+                      className="w-full px-4 py-2.5 text-sm rounded-xl border outline-none bg-white/80 dark:bg-gray-800/80 border-slate-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 caret-blue-500 hover:border-slate-300 dark:hover:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all duration-200"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* ═════════════════════════════════════════════════ */}
+              {/* HÁBITOS */}
+              {/* ═════════════════════════════════════════════════ */}
+
+              <div className="rounded-2xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-white/80 dark:border-gray-800/60 shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.15)] p-5 sm:p-7">
+                <div className="flex items-center gap-3 mb-5 pb-3 border-b border-slate-200/60 dark:border-gray-700/60">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 shrink-0">
+                    <Activity className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-gray-800 dark:text-gray-100">Hábitos</h2>
+                    <p className="text-[11px] text-gray-400 dark:text-gray-500">Estilo de vida do paciente</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <AutoExpandTextarea
+                    id="fu-sono"
+                    label="Sono"
+                    value={form.sono}
+                    onChange={(v) => patch("sono", v)}
+                    rows={2}
+                  />
+                  <AutoExpandTextarea
+                    id="fu-apetite"
+                    label="Apetite"
+                    value={form.apetite}
+                    onChange={(v) => patch("apetite", v)}
+                    rows={2}
+                  />
+                  <AutoExpandTextarea
+                    id="fu-tabagismo"
+                    label="Tabagismo"
+                    value={form.tabagismo}
+                    onChange={(v) => patch("tabagismo", v)}
+                    rows={2}
+                  />
+                  <AutoExpandTextarea
+                    id="fu-etilismo"
+                    label="Etilismo"
+                    value={form.etilismo}
+                    onChange={(v) => patch("etilismo", v)}
+                    rows={2}
+                  />
+                  <div className="sm:col-span-2">
+                    <AutoExpandTextarea
+                      id="fu-atividade-fisica"
+                      label="Atividade Física"
+                      value={form.atividade_fisica}
+                      onChange={(v) => patch("atividade_fisica", v)}
+                      rows={2}
+                    />
                   </div>
                 </div>
               </div>

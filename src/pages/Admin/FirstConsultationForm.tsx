@@ -14,10 +14,12 @@ import {
   User,
   Stethoscope,
   Clock,
-  Sparkles,
+  FileHeart,
   ShieldCheck,
   Sun,
   Moon,
+  HeartPulse,
+  Activity,
 } from "lucide-react";
 import { supabase } from "../../supabaseClient";
 import { supabaseDb } from "../../supabaseDbClient";
@@ -49,6 +51,17 @@ interface FormState {
   escolaridade: string;
   profissao: string;
   religiao: string;
+  onde_mora: string;
+  com_mora: string;
+  pa_sistolica: string;
+  pa_diastolica: string;
+  fc: string;
+  saturacao: string;
+  sono: string;
+  apetite: string;
+  tabagismo: string;
+  etilismo: string;
+  atividade_fisica: string;
   comorbidades: string;
   medicacoes_uso_continuo: string;
   queixa_principal: string;
@@ -66,6 +79,17 @@ const INITIAL_FORM: FormState = {
   escolaridade: "",
   profissao: "",
   religiao: "",
+  onde_mora: "",
+  com_mora: "",
+  pa_sistolica: "",
+  pa_diastolica: "",
+  fc: "",
+  saturacao: "",
+  sono: "",
+  apetite: "",
+  tabagismo: "",
+  etilismo: "",
+  atividade_fisica: "",
   comorbidades: "",
   medicacoes_uso_continuo: "",
   queixa_principal: "",
@@ -446,6 +470,7 @@ export default function FirstConsultationForm() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const diastolicRef = useRef<HTMLInputElement>(null);
 
   // ── Fetch anamnesis + existing profile ──────────────────────────────────────
 
@@ -485,6 +510,8 @@ export default function FirstConsultationForm() {
               escolaridade: profData.escolaridade ?? "",
               profissao: profData.profissao ?? "",
               religiao: profData.religiao ?? "",
+              onde_mora: profData.onde_mora ?? "",
+              com_mora: profData.com_mora ?? "",
             }));
           }
         } catch {
@@ -524,6 +551,8 @@ export default function FirstConsultationForm() {
             escolaridade: form.escolaridade || null,
             profissao: form.profissao.trim() || null,
             religiao: form.religiao.trim() || null,
+            onde_mora: form.onde_mora.trim() || null,
+            com_mora: form.com_mora.trim() || null,
           })
           .eq("id", existingProfile.id);
 
@@ -539,6 +568,8 @@ export default function FirstConsultationForm() {
             escolaridade: form.escolaridade || null,
             profissao: form.profissao.trim() || null,
             religiao: form.religiao.trim() || null,
+            onde_mora: form.onde_mora.trim() || null,
+            com_mora: form.com_mora.trim() || null,
           })
           .select("id")
           .single();
@@ -553,6 +584,15 @@ export default function FirstConsultationForm() {
         .insert({
           profile_id: profileId,
           tipo_consulta: "primeira",
+          pa_sistolica: form.pa_sistolica.trim() || null,
+          pa_diastolica: form.pa_diastolica.trim() || null,
+          fc: form.fc.trim() || null,
+          saturacao: form.saturacao.trim() || null,
+          sono: form.sono.trim() || null,
+          apetite: form.apetite.trim() || null,
+          tabagismo: form.tabagismo.trim() || null,
+          etilismo: form.etilismo.trim() || null,
+          atividade_fisica: form.atividade_fisica.trim() || null,
           comorbidades: form.comorbidades.trim() || null,
           medicacoes_uso_continuo: form.medicacoes_uso_continuo.trim() || null,
           queixa_principal: form.queixa_principal.trim() || null,
@@ -747,7 +787,7 @@ export default function FirstConsultationForm() {
           {/* Date + document title */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/30 w-fit">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+              <FileHeart className="w-3.5 h-3.5 text-emerald-500" />
               <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">
                 Documento Clínico
               </span>
@@ -821,7 +861,7 @@ export default function FirstConsultationForm() {
           </div>
 
           {/* ═══════════════════════════════════════════════════════════════ */}
-          {/* PERFIL SOCIODEMOGRÁFICO */}
+          {/* IDENTIFICAÇÃO */}
           {/* ═══════════════════════════════════════════════════════════════ */}
 
           <div className="
@@ -834,7 +874,7 @@ export default function FirstConsultationForm() {
           ">
             <SectionHeader
               icon={<FileText className="w-4 h-4" />}
-              title="Perfil Sociodemográfico"
+              title="Identificação"
               subtitle="Dados complementares do paciente"
             />
 
@@ -864,6 +904,169 @@ export default function FirstConsultationForm() {
                 value={form.religiao}
                 onChange={(v) => patch("religiao", v)}
               />
+              <FloatingInput
+                id="fc-onde-mora"
+                label="Onde mora"
+                value={form.onde_mora}
+                onChange={(v) => patch("onde_mora", v)}
+              />
+              <FloatingInput
+                id="fc-com-mora"
+                label="Com quem mora"
+                value={form.com_mora}
+                onChange={(v) => patch("com_mora", v)}
+              />
+            </div>
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* SINAIS VITAIS E EXAME FÍSICO */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+
+          <div className="
+            rounded-2xl
+            bg-white/60 dark:bg-gray-900/60
+            backdrop-blur-xl
+            border border-white/80 dark:border-gray-800/60
+            shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.15)]
+            p-5 sm:p-7
+          ">
+            <SectionHeader
+              icon={<HeartPulse className="w-4 h-4" />}
+              title="Sinais Vitais e Exame Físico"
+              subtitle="Aferições do atendimento"
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* PA — campo duplo */}
+              <div>
+                <label className="block text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2 ml-1">
+                  PA (mmHg)
+                </label>
+                <div className="flex items-stretch rounded-xl border border-slate-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 overflow-hidden hover:border-slate-300 dark:hover:border-gray-600 focus-within:border-blue-400 dark:focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/15 transition-all duration-200">
+                  <div className="flex-1 flex flex-col justify-center px-3 py-1.5">
+                    <span className="text-[9px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide leading-none">sistólica</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={3}
+                      id="fc-pa-sistolica"
+                      value={form.pa_sistolica}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/\D/g, "").slice(0, 3);
+                        patch("pa_sistolica", v);
+                        if (v.length === 3) diastolicRef.current?.focus();
+                      }}
+                      placeholder="120"
+                      className="w-full text-sm border-none outline-none bg-transparent text-gray-900 dark:text-gray-100 caret-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500 py-0"
+                    />
+                  </div>
+                  <span className="shrink-0 w-px bg-slate-200 dark:bg-gray-700" />
+                  <div className="flex-1 flex flex-col justify-center px-3 py-1.5">
+                    <span className="text-[9px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide leading-none">diastólica</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={3}
+                      ref={diastolicRef}
+                      id="fc-pa-diastolica"
+                      value={form.pa_diastolica}
+                      onChange={(e) => patch("pa_diastolica", e.target.value.replace(/\D/g, "").slice(0, 3))}
+                      placeholder="80"
+                      className="w-full text-sm border-none outline-none bg-transparent text-gray-900 dark:text-gray-100 caret-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500 py-0"
+                    />
+                  </div>
+                </div>
+              </div>
+              {/* FC */}
+              <div>
+                <label htmlFor="fc-fc" className="block text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2 ml-1">
+                  FC (bpm)
+                </label>
+                <input
+                  type="text"
+                  id="fc-fc"
+                  value={form.fc}
+                  onChange={(e) => patch("fc", e.target.value)}
+                  placeholder="Ex: 72"
+                  className="w-full px-4 py-2.5 text-sm rounded-xl border outline-none bg-white/80 dark:bg-gray-800/80 border-slate-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 caret-blue-500 hover:border-slate-300 dark:hover:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all duration-200"
+                />
+              </div>
+              {/* Saturação */}
+              <div>
+                <label htmlFor="fc-saturacao" className="block text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2 ml-1">
+                  Saturação (%)
+                </label>
+                <input
+                  type="text"
+                  id="fc-saturacao"
+                  value={form.saturacao}
+                  onChange={(e) => patch("saturacao", e.target.value)}
+                  placeholder="Ex: 98"
+                  className="w-full px-4 py-2.5 text-sm rounded-xl border outline-none bg-white/80 dark:bg-gray-800/80 border-slate-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 caret-blue-500 hover:border-slate-300 dark:hover:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all duration-200"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* HÁBITOS */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+
+          <div className="
+            rounded-2xl
+            bg-white/60 dark:bg-gray-900/60
+            backdrop-blur-xl
+            border border-white/80 dark:border-gray-800/60
+            shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.15)]
+            p-5 sm:p-7
+          ">
+            <SectionHeader
+              icon={<Activity className="w-4 h-4" />}
+              title="Hábitos"
+              subtitle="Estilo de vida do paciente"
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <AutoExpandTextarea
+                id="fc-sono"
+                label="Sono"
+                value={form.sono}
+                onChange={(v) => patch("sono", v)}
+                rows={2}
+              />
+              <AutoExpandTextarea
+                id="fc-apetite"
+                label="Apetite"
+                value={form.apetite}
+                onChange={(v) => patch("apetite", v)}
+                rows={2}
+              />
+              <AutoExpandTextarea
+                id="fc-tabagismo"
+                label="Tabagismo"
+                value={form.tabagismo}
+                onChange={(v) => patch("tabagismo", v)}
+                rows={2}
+              />
+              <AutoExpandTextarea
+                id="fc-etilismo"
+                label="Etilismo"
+                value={form.etilismo}
+                onChange={(v) => patch("etilismo", v)}
+                rows={2}
+              />
+              <div className="sm:col-span-2">
+                <AutoExpandTextarea
+                  id="fc-atividade-fisica"
+                  label="Atividade Física"
+                  value={form.atividade_fisica}
+                  onChange={(v) => patch("atividade_fisica", v)}
+                  rows={2}
+                />
+              </div>
             </div>
           </div>
 
