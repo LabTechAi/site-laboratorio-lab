@@ -38,6 +38,7 @@ const UNITS: Unit[] = [
     subtitle: "Lago Sul",
     address: "QI 3, Edifício Medical Plaza — Lago Sul, Brasília – DF",
     hours: "Seg–Sex: 07h30 às 17h00",
+    phone: "(61) 3345-3766",
     mapSrc:
       "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3838.7914469485625!2d-47.917772324937946!3d-15.843089937804598!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x935bcc14debb1b1b%3A0x4a2af6a2c5e2c5d3!2sQI%203%20-%20Lago%20Sul%2C%20Bras%C3%ADlia%20-%20DF!5e0!3m2!1spt-BR!2sbr!4v1700000000001!5m2!1spt-BR!2sbr",
   },

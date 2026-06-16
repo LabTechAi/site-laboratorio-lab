@@ -328,15 +328,15 @@ const PremiumSelect: React.FC<PremiumSelectProps> = ({
   useEffect(() => {
     if (!open) return;
     const handleScroll = (e: Event) => {
-      if (listRef.current?.contains(e.target as Node)) return;
+      const target = e.target;
+      if (target instanceof Node && listRef.current?.contains(target)) return;
+      // Ignore scrolls on document/window (keyboard-triggered on mobile)
+      if (target === document || target === window) return;
       handleClose();
     };
-    const handleResize = () => handleClose();
     window.addEventListener("scroll", handleScroll, true);
-    window.addEventListener("resize", handleResize);
     return () => {
       window.removeEventListener("scroll", handleScroll, true);
-      window.removeEventListener("resize", handleResize);
     };
   }, [open, handleClose]);
 
