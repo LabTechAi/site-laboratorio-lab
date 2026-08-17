@@ -22,6 +22,14 @@ interface Slide {
 
 const SLIDES: Slide[] = [
   {
+    bg: "/assets/fundos home/dia-dos-pais.jpeg",
+    title: "Todo pai é um super-herói.",
+    subtitle:
+      "Neste Dia dos Pais, cuide de quem sempre esteve ao seu lado.",
+    ctaPrimary: { label: "Conheça nossos serviços", href: "#especialidades" },
+    ctaSecondary: { label: "Entre em Contato", href: "#contato" },
+  },
+  {
     bg: "/assets/background/fundo titulo.png",
     title: "Saúde Vista de Perto",
     subtitle: "50 anos de excelência em medicina diagnóstica",
@@ -40,14 +48,6 @@ const SLIDES: Slide[] = [
     title: "Cuide-se",
     subtitle: "Sua saúde merece toda atenção e cuidado",
     ctaPrimary: { label: "Saiba Mais", href: "#sobre" },
-    ctaSecondary: { label: "Entre em Contato", href: "#contato" },
-  },
-  {
-    bg: "/assets/fundos home/MAIO VERMELHO.svg",
-    title: "Maio Vermelho:\nA Patologia no Diagnóstico Precoce\ndo Câncer Bucal",
-    subtitle:
-      "Lesões suspeitas exigem análise rigorosa. O Laboratório LAB oferece a precisão necessária para o diagnóstico citopatológico e histopatológico.",
-    ctaPrimary: { label: "Conheça nossos exames de Patologia", href: "#exames" },
     ctaSecondary: { label: "Entre em Contato", href: "#contato" },
   },
 ];
